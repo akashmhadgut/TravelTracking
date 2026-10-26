@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "FleetCommand Driver",
+    "slug": "fleetcommand-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#020617"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "in.deccantransit.fleetcommand.driver",
+      "infoPlist": {
+        "UIBackgroundModes": ["location", "fetch"],
+        "NSLocationWhenInUseUsageDescription": "Location is shared with dispatch only while an assigned bus trip is active.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Continuous background location is required during an active bus trip to share real-time progress with dispatch even when the screen is locked."
+      }
+    },
+    "android": {
+      "package": "in.deccantransit.fleetcommand.driver",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Location is shared with dispatch only while your assigned bus trip is active.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
+    ]
+  }
+}

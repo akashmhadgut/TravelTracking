@@ -1,0 +1,24 @@
+{
+  "name": "fleet-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fleet Management & Live Bus Tracking Monorepo (Engineering Spec v1.0)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace=apps/api run dev",
+    "dev:worker": "npm --workspace=apps/api run worker",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "dev:driver": "npm --workspace=apps/driver run dev",
+    "dev:simulator": "npm --workspace=apps/simulator run dev",
+    "build": "npm run --workspaces --if-present build",
+    "typecheck": "npm run --workspaces --if-present typecheck",
+    "test": "npm run --workspaces --if-present test",
+    "lint": "npm run --workspaces --if-present lint"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
