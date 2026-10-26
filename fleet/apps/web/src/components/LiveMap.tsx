@@ -23,7 +23,7 @@ export const LiveMap: React.FC = () => {
 
     const map = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://tiles.openfreemap.org/styles/dark',
+      style: 'https://tiles.openfreemap.org/styles/positron',
       center: [73.8567, 18.5204], // Pune Center
       zoom: 13,
     });
@@ -131,9 +131,9 @@ export const LiveMap: React.FC = () => {
             width: 40px;
             height: 40px;
             border-radius: 9999px;
-            background: #0f172a;
-            border: 2.5px solid ${isSelected ? '#38bdf8' : statusColor};
-            box-shadow: 0 4px 14px ${isSelected ? 'rgba(56, 189, 248, 0.6)' : 'rgba(0, 0, 0, 0.7)'};
+            background: #ffffff;
+            border: 2.5px solid ${isSelected ? '#4f46e5' : statusColor};
+            box-shadow: 0 4px 14px ${isSelected ? 'rgba(79, 70, 229, 0.4)' : 'rgba(15, 23, 42, 0.15)'};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -153,18 +153,18 @@ export const LiveMap: React.FC = () => {
           <div style="
             margin-top: 4px;
             white-space: nowrap;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid ${isSelected ? '#38bdf8' : 'rgba(51, 65, 85, 0.9)'};
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid ${isSelected ? '#4f46e5' : '#cbd5e1'};
             padding: 2px 7px;
             border-radius: 9999px;
             display: flex;
             align-items: center;
             gap: 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1);
             pointer-events: none;
           ">
             <span style="width: 6px; height: 6px; border-radius: 9999px; background: ${statusColor};"></span>
-            <span style="font-size: 10px; font-weight: 800; font-family: monospace; color: #f8fafc;">${regPlate}</span>
+            <span style="font-size: 10px; font-weight: 800; font-family: monospace; color: #0f172a;">${regPlate}</span>
             <span style="font-size: 9px; font-weight: 700; font-family: monospace; color: ${statusColor};">${speedText}</span>
           </div>
         </div>

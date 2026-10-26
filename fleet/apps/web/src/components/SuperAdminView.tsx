@@ -72,7 +72,7 @@ export const SuperAdminView: React.FC = () => {
   // 5. Append-Only Audit Log State
   const [auditEntries, setAuditEntries] = useState([
     { id: 'aud-01', actor: 'admin@fleetcommand.io (Super Admin)', action: 'UPDATE_ORGANIZATION_SETTINGS', entity: 'organizations/settings', timestamp: '2026-10-26 12:15:00', ip: '103.21.144.10', details: 'Speed limit set to 80 km/h; GPS retention set to 90 days' },
-    { id: 'aud-02', actor: 'manager@fleetcommand.io (Fleet Manager)', action: 'DISPATCH_TRIP', entity: 'trips/0192f0a1-7c3e', timestamp: '2026-10-26 11:45:10', ip: '103.21.144.12', details: 'Bus MH-12-DT-0001 paired with Driver Ganesh Jadhav on Route RT-501' },
+    { id: 'aud-02', actor: 'manager@fleetcommand.io (Fleet Manager)', action: 'DISPATCH_TRIP', entity: 'trips/0192f0a1-7c3e', timestamp: '2026-10-26 11:45:10', ip: '103.21.144.12', details: 'Car MH-12-DT-0001 paired with Driver Ganesh Jadhav on Route RT-501' },
     { id: 'aud-03', actor: 'manager@fleetcommand.io (Fleet Manager)', action: 'ENROLL_DRIVER_RECORD', entity: 'drivers/drv-001', timestamp: '2026-10-26 11:20:00', ip: '103.21.144.12', details: 'Enrolled driver Ganesh Jadhav (HMV-Passenger)' },
     { id: 'aud-04', actor: 'ganesh.jadhav (Driver)', action: 'DPDP_LOCATION_CONSENT_ACCEPTED', entity: 'consents/drv-001', timestamp: '2026-10-26 09:30:15', ip: '172.56.21.89', details: 'Accepted DPDP location tracking consent v1.0 during mobile onboarding' },
     { id: 'aud-05', actor: 'admin@fleetcommand.io (Super Admin)', action: 'CREATE_USER_ACCOUNT', entity: 'users/usr-3', timestamp: '2026-10-25 18:00:20', ip: '103.21.144.10', details: 'Created supervisor account for Amit Deshmukh' },
@@ -182,16 +182,16 @@ export const SuperAdminView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-950 overflow-hidden text-slate-100 font-sans">
+    <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden text-slate-800 font-sans">
       {/* Super Admin Top Sub-Navigation Bar */}
-      <div className="bg-slate-900 border-b border-slate-800 px-6 py-2.5 flex items-center justify-between z-20 shrink-0">
+      <div className="bg-white border-b border-slate-200/80 px-6 py-2.5 flex items-center justify-between z-20 shrink-0 shadow-2xs">
         <div className="flex items-center gap-1.5 overflow-x-auto">
           <button
             onClick={() => setActiveTab('company')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'company'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
@@ -200,10 +200,10 @@ export const SuperAdminView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('settings')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'settings'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
@@ -212,10 +212,10 @@ export const SuperAdminView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'users'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
@@ -224,10 +224,10 @@ export const SuperAdminView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('consents')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'consents'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <FileCheck2 className="w-3.5 h-3.5" />
@@ -236,47 +236,47 @@ export const SuperAdminView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'audit'
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <History className="w-3.5 h-3.5" />
             <span>5. Audit Log ({auditEntries.length})</span>
           </button>
 
-          <div className="h-4 w-px bg-slate-800 mx-2" />
+          <div className="h-4 w-px bg-slate-200 mx-2" />
 
-          {/* Super Admin Omniscient Access (Can do everything a Fleet Manager can) */}
+          {/* Super Admin Omniscient Access */}
           <button
             onClick={() => setActiveTab('fleet_dir')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'fleet_dir'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Car className="w-3.5 h-3.5 text-blue-400" />
+            <Car className="w-3.5 h-3.5 text-indigo-600" />
             <span>Cars Directory</span>
           </button>
 
           <button
             onClick={() => setActiveTab('live_ops')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'live_ops'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <MapPin className="w-3.5 h-3.5 text-blue-400" />
+            <MapPin className="w-3.5 h-3.5 text-indigo-600" />
             <span>Live Operations Desk</span>
           </button>
         </div>
 
         {savedNotice && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold animate-pulse">
-            <CheckCircle2 className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold animate-pulse">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{savedNotice}</span>
           </div>
         )}
@@ -284,30 +284,28 @@ export const SuperAdminView: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto">
-        {/* ========================================================= */}
         {/* TAB 1: Company Account Setup */}
-        {/* ========================================================= */}
         {activeTab === 'company' && (
           <div className="max-w-4xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-purple-400" />
+                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-indigo-600" />
                   <span>Company Account & Organization Profile</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Owner authority: Setup legal entity identity, contact details, operating hours, and localized timezone.
                 </p>
               </div>
-              <span className="text-[10px] font-mono bg-purple-950/60 border border-purple-800/40 text-purple-300 px-2.5 py-1 rounded font-bold">
+              <span className="text-[10px] font-mono bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg font-bold">
                 TENANT ID: 0192f0a1-7c3e-7c11-9d0a
               </span>
             </div>
 
-            <form onSubmit={handleSaveCompany} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-2xl">
+            <form onSubmit={handleSaveCompany} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xs">
               <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Registered Company Name *
                   </label>
                   <input
@@ -315,12 +313,12 @@ export const SuperAdminView: React.FC = () => {
                     required
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Corporate Registration (CIN / GSTIN) *
                   </label>
                   <input
@@ -328,77 +326,77 @@ export const SuperAdminView: React.FC = () => {
                     required
                     value={cinNumber}
                     onChange={(e) => setCinNumber(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Official Contact Email *
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                    <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                     <input
                       type="email"
                       required
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Support Contact Phone *
                   </label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
+                    <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                     <input
                       type="tel"
                       required
                       value={contactPhone}
                       onChange={(e) => setContactPhone(e.target.value)}
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-purple-500"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Operating Hours & Timezone */}
-              <div className="border-t border-slate-800/80 pt-5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-3 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
+              <div className="border-t border-slate-100 pt-5">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-3 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-indigo-600" />
                   <span>Fleet Operating Window & Dispatch Hours</span>
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Daily Operations Start</label>
+                    <label className="block text-xs text-slate-500 mb-1 font-medium">Daily Operations Start</label>
                     <input
                       type="time"
                       value={operatingHoursStart}
                       onChange={(e) => setOperatingHoursStart(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Daily Operations End</label>
+                    <label className="block text-xs text-slate-500 mb-1 font-medium">Daily Operations End</label>
                     <input
                       type="time"
                       value={operatingHoursEnd}
                       onChange={(e) => setOperatingHoursEnd(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">System Timezone</label>
+                    <label className="block text-xs text-slate-500 mb-1 font-medium">System Timezone</label>
                     <input
                       type="text"
                       disabled
                       value={timezone}
-                      className="w-full bg-slate-950/60 border border-slate-800/60 rounded-xl px-3 py-2 text-xs text-slate-400 font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-mono"
                     />
                   </div>
                 </div>
@@ -407,7 +405,7 @@ export const SuperAdminView: React.FC = () => {
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/30 transition flex items-center gap-2"
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Save Organization Account Details</span>
@@ -417,33 +415,31 @@ export const SuperAdminView: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* TAB 2: System Settings & Safety Thresholds */}
-        {/* ========================================================= */}
         {activeTab === 'settings' && (
           <div className="max-w-4xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-purple-400" />
+                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-indigo-600" />
                   <span>Global Safety Limits & GPS Retention Policies</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Configure real-time overspeed alert limits, stale signal window, offline thresholds, and raw telemetry retention days.
                 </p>
               </div>
             </div>
 
-            <form onSubmit={handleSaveSettings} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-2xl">
+            <form onSubmit={handleSaveSettings} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xs">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-3 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-3 flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
                   <span>Real-Time Alert Thresholds (Spec §4)</span>
                 </h3>
 
                 <div className="grid grid-cols-2 gap-5">
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
                       Fleet Overspeed Threshold (km/h)
                     </label>
                     <p className="text-[11px] text-slate-500 mb-2">
@@ -456,18 +452,18 @@ export const SuperAdminView: React.FC = () => {
                         max={140}
                         value={speedLimit}
                         onChange={(e) => setSpeedLimit(Number(e.target.value))}
-                        className="w-32 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono font-bold"
+                        className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono font-bold focus:outline-none focus:border-indigo-600"
                       />
-                      <span className="text-xs text-slate-400 font-semibold">km/h limit</span>
+                      <span className="text-xs text-slate-500 font-semibold">km/h limit</span>
                     </div>
                   </div>
 
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
                       Unplanned Stoppage / Idle Alert (Minutes)
                     </label>
                     <p className="text-[11px] text-slate-500 mb-2">
-                      Alerts Control Room if bus is stopped on route without scheduled stop for &gt; N minutes.
+                      Alerts Control Room if car is stopped on route without scheduled stop for &gt; N minutes.
                     </p>
                     <div className="flex items-center gap-3">
                       <input
@@ -476,24 +472,24 @@ export const SuperAdminView: React.FC = () => {
                         max={60}
                         value={stoppageTimeout}
                         onChange={(e) => setStoppageTimeout(Number(e.target.value))}
-                        className="w-32 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono font-bold"
+                        className="w-32 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono font-bold focus:outline-none focus:border-indigo-600"
                       />
-                      <span className="text-xs text-slate-400 font-semibold">minutes idle</span>
+                      <span className="text-xs text-slate-500 font-semibold">minutes idle</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* GPS Retention & Heartbeat Policy */}
-              <div className="border-t border-slate-800/80 pt-5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-3 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-blue-400" />
+              <div className="border-t border-slate-100 pt-5">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-3 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-indigo-600" />
                   <span>Telemetry Retention & Signal Timing (Spec §4 & §12)</span>
                 </h3>
 
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
                       Raw GPS Retention (Days)
                     </label>
                     <input
@@ -502,13 +498,13 @@ export const SuperAdminView: React.FC = () => {
                       max={365}
                       value={retentionDays}
                       onChange={(e) => setRetentionDays(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono font-bold"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-indigo-600"
                     />
                     <span className="text-[10px] text-slate-500 mt-1 block">PostgreSQL monthly partitions dropped after N days</span>
                   </div>
 
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
                       Stale Signal Window (Seconds)
                     </label>
                     <input
@@ -517,13 +513,13 @@ export const SuperAdminView: React.FC = () => {
                       max={300}
                       value={staleInterval}
                       onChange={(e) => setStaleInterval(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono font-bold"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-indigo-600"
                     />
-                    <span className="text-[10px] text-slate-500 mt-1 block">Bus marked yellow 'Stale' if no telemetry arrives</span>
+                    <span className="text-[10px] text-slate-500 mt-1 block">Car marked yellow 'Stale' if no telemetry arrives</span>
                   </div>
 
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
                       Offline Signal Window (Seconds)
                     </label>
                     <input
@@ -532,18 +528,18 @@ export const SuperAdminView: React.FC = () => {
                       max={1800}
                       value={offlineInterval}
                       onChange={(e) => setOfflineInterval(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono font-bold"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-indigo-600"
                     />
-                    <span className="text-[10px] text-slate-500 mt-1 block">Bus marked red 'Offline' after N seconds silence</span>
+                    <span className="text-[10px] text-slate-500 mt-1 block">Car marked gray 'Offline' after N seconds silence</span>
                   </div>
                 </div>
               </div>
 
               {/* Compliance Audit Retention */}
-              <div className="border-t border-slate-800/80 pt-5">
+              <div className="border-t border-slate-100 pt-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-xs font-bold text-slate-300">
+                    <label className="block text-xs font-bold text-slate-800">
                       Compliance Audit Log Retention Period
                     </label>
                     <p className="text-[11px] text-slate-500">
@@ -557,9 +553,9 @@ export const SuperAdminView: React.FC = () => {
                       max={10}
                       value={auditRetentionYears}
                       onChange={(e) => setAuditRetentionYears(Number(e.target.value))}
-                      className="w-20 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono text-center font-bold"
+                      className="w-20 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-mono text-center font-bold focus:outline-none focus:border-indigo-600"
                     />
-                    <span className="text-xs text-slate-400">Years</span>
+                    <span className="text-xs text-slate-500 font-medium">Years</span>
                   </div>
                 </div>
               </div>
@@ -567,7 +563,7 @@ export const SuperAdminView: React.FC = () => {
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/30 transition flex items-center gap-2"
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Apply & Enforce System Policies</span>
@@ -577,24 +573,22 @@ export const SuperAdminView: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 3: Staff User Management (Fleet Managers & Supervisors) */}
-        {/* ========================================================= */}
+        {/* TAB 3: Staff User Management */}
         {activeTab === 'users' && (
           <div className="max-w-5xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-purple-400" />
+                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-indigo-600" />
                   <span>Staff User Administration & RBAC Hierarchy</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Create and manage authorized staff accounts: Fleet Managers (full fleet authority) and Supervisors (read-only control room).
                 </p>
               </div>
               <button
                 onClick={() => setShowAddUserModal(true)}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>+ Create New Staff User</span>
@@ -602,24 +596,24 @@ export const SuperAdminView: React.FC = () => {
             </div>
 
             {/* Filter Bar */}
-            <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+            <div className="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-xl shadow-2xs">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search staff by name, email, or role..."
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500"
+                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
                 />
               </div>
             </div>
 
             {/* Users Table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                     <th className="p-4">Staff Member</th>
                     <th className="p-4">Contact Phone</th>
                     <th className="p-4">System Role</th>
@@ -628,27 +622,27 @@ export const SuperAdminView: React.FC = () => {
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
                   {users
                     .filter((u) => u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(userSearchQuery.toLowerCase()))
                     .map((user) => (
-                      <tr key={user.id} className="hover:bg-slate-800/30 transition">
+                      <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="p-4">
-                          <div className="font-bold text-white text-sm">{user.name}</div>
-                          <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
-                            <Mail className="w-3 h-3 text-slate-500" />
+                          <div className="font-bold text-slate-900 text-sm font-sans">{user.name}</div>
+                          <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
+                            <Mail className="w-3 h-3 text-slate-400" />
                             <span>{user.email}</span>
                           </div>
                         </td>
-                        <td className="p-4 font-mono text-slate-300">{user.phone}</td>
+                        <td className="p-4 font-mono text-slate-700">{user.phone}</td>
                         <td className="p-4">
                           <span
                             className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${
                               user.role === 'super_admin'
-                                ? 'bg-purple-950/60 border-purple-600/40 text-purple-300'
+                                ? 'bg-purple-50 border-purple-200 text-purple-700'
                                 : user.role === 'fleet_manager'
-                                ? 'bg-blue-950/60 border-blue-600/40 text-blue-300'
-                                : 'bg-amber-950/60 border-amber-600/40 text-amber-300'
+                                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                                : 'bg-amber-50 border-amber-200 text-amber-700'
                             }`}
                           >
                             {user.role === 'super_admin' ? 'Super Admin' : user.role === 'fleet_manager' ? 'Fleet Manager' : 'Supervisor'}
@@ -658,28 +652,28 @@ export const SuperAdminView: React.FC = () => {
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                               user.status === 'active'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
                             }`}
                           >
                             {user.status}
                           </span>
                         </td>
-                        <td className="p-4 text-slate-400 font-mono text-[11px]">{user.lastLogin}</td>
-                        <td className="p-4 text-right">
+                        <td className="p-4 text-slate-500 font-mono text-[11px]">{user.lastLogin}</td>
+                        <td className="p-4 text-right font-sans">
                           {user.role !== 'super_admin' ? (
                             <button
                               onClick={() => toggleUserStatus(user.id)}
-                              className={`px-2.5 py-1 rounded text-xs font-semibold transition border ${
+                              className={`px-2.5 py-1 rounded text-xs font-semibold transition border cursor-pointer ${
                                 user.status === 'active'
-                                  ? 'bg-rose-950/40 border-rose-800/40 text-rose-300 hover:bg-rose-900/60'
-                                  : 'bg-emerald-950/40 border-emerald-800/40 text-emerald-300 hover:bg-emerald-900/60'
+                                  ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
+                                  : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
                               }`}
                             >
                               {user.status === 'active' ? 'Suspend' : 'Activate'}
                             </button>
                           ) : (
-                            <span className="text-[10px] text-slate-600 font-mono">Owner (Protected)</span>
+                            <span className="text-[10px] text-slate-400 font-mono">Owner (Protected)</span>
                           )}
                         </td>
                       </tr>
@@ -690,23 +684,21 @@ export const SuperAdminView: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* TAB 4: Driver DPDP Consent Compliance Registry */}
-        {/* ========================================================= */}
         {activeTab === 'consents' && (
           <div className="max-w-5xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  <FileCheck2 className="w-5 h-5 text-emerald-400" />
+                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <FileCheck2 className="w-5 h-5 text-emerald-600" />
                   <span>Driver Location Consent Compliance Register</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Enforces India Digital Personal Data Protection (DPDP) Act 2023 & §6 of Spec. Drivers without valid consent cannot be dispatched on trips.
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-emerald-950/60 border border-emerald-600/40 text-emerald-300 rounded-lg text-xs font-bold font-mono">
+                <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-bold font-mono">
                   DPDP Policy: v1.0 Active
                 </span>
               </div>
@@ -714,29 +706,29 @@ export const SuperAdminView: React.FC = () => {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                <div className="text-[11px] font-bold uppercase text-slate-400">Total Enrolled Drivers</div>
-                <div className="text-2xl font-black text-white mt-1">{consents.length}</div>
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
+                <div className="text-[11px] font-bold uppercase text-slate-500">Total Enrolled Drivers</div>
+                <div className="text-2xl font-black text-slate-900 mt-1">{consents.length}</div>
               </div>
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                <div className="text-[11px] font-bold uppercase text-emerald-400">Consent Verified (Eligible)</div>
-                <div className="text-2xl font-black text-emerald-400 mt-1">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
+                <div className="text-[11px] font-bold uppercase text-emerald-600">Consent Verified (Eligible)</div>
+                <div className="text-2xl font-black text-emerald-600 mt-1">
                   {consents.filter((c) => c.status === 'CONSENTED').length}
                 </div>
               </div>
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                <div className="text-[11px] font-bold uppercase text-amber-400">Pending Consent (Blocked)</div>
-                <div className="text-2xl font-black text-amber-400 mt-1">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
+                <div className="text-[11px] font-bold uppercase text-amber-600">Pending Consent (Blocked)</div>
+                <div className="text-2xl font-black text-amber-600 mt-1">
                   {consents.filter((c) => c.status === 'PENDING').length}
                 </div>
               </div>
             </div>
 
             {/* Consents Table */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                     <th className="p-4">Driver Name & Phone</th>
                     <th className="p-4">Licence Number</th>
                     <th className="p-4">Consent Status</th>
@@ -745,41 +737,41 @@ export const SuperAdminView: React.FC = () => {
                     <th className="p-4 text-right">Audit Proof</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
                   {consents.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-800/30 transition">
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="p-4">
-                        <div className="font-bold text-white">{c.name}</div>
-                        <div className="text-[11px] text-slate-400 font-mono">{c.phone}</div>
+                        <div className="font-bold text-slate-900 font-sans">{c.name}</div>
+                        <div className="text-[11px] text-slate-500 font-mono">{c.phone}</div>
                       </td>
-                      <td className="p-4 font-mono text-slate-300">{c.license}</td>
+                      <td className="p-4 font-mono text-slate-700">{c.license}</td>
                       <td className="p-4">
                         <span
                           className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${
                             c.status === 'CONSENTED'
-                              ? 'bg-emerald-950/60 border-emerald-600/40 text-emerald-300'
-                              : 'bg-amber-950/60 border-amber-600/40 text-amber-300'
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                              : 'bg-amber-50 border-amber-200 text-amber-700'
                           }`}
                         >
                           {c.status}
                         </span>
                       </td>
-                      <td className="p-4 font-mono text-[11px] text-slate-300">{c.version}</td>
+                      <td className="p-4 font-mono text-[11px] text-slate-600">{c.version}</td>
                       <td className="p-4">
-                        <div className="text-slate-300 font-mono text-[11px]">{c.consentedAt}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{c.device}</div>
+                        <div className="text-slate-800 font-mono text-[11px]">{c.consentedAt}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">{c.device}</div>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-4 text-right font-sans">
                         {c.status === 'CONSENTED' ? (
                           <button
                             onClick={() => setSelectedConsentCert(c)}
-                            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs font-semibold flex items-center gap-1 ml-auto"
+                            className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 ml-auto shadow-2xs cursor-pointer"
                           >
-                            <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
                             <span>View Proof</span>
                           </button>
                         ) : (
-                          <span className="text-amber-400 text-[11px] font-semibold">Requires Phone Login</span>
+                          <span className="text-amber-600 text-[11px] font-semibold">Requires Phone Login</span>
                         )}
                       </td>
                     </tr>
@@ -790,42 +782,40 @@ export const SuperAdminView: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================= */}
         {/* TAB 5: Append-Only Audit Trail */}
-        {/* ========================================================= */}
         {activeTab === 'audit' && (
           <div className="max-w-5xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  <History className="w-5 h-5 text-purple-400" />
+                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <History className="w-5 h-5 text-indigo-600" />
                   <span>Append-Only Forensic Transaction Audit Trail</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Enforces §12.2 of Spec. Tracks every change to settings, user roles, driver enrollments, and trip lifecycle events.
                 </p>
               </div>
-              <span className="text-[10px] font-mono bg-purple-950/60 border border-purple-800/40 text-purple-300 px-3 py-1 rounded font-bold">
+              <span className="text-[10px] font-mono bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1 rounded-lg font-bold">
                 NO UPDATE/DELETE GRANT
               </span>
             </div>
 
             {/* Filter */}
-            <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+            <div className="bg-white border border-slate-200 p-3 rounded-xl flex items-center gap-3 shadow-2xs">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Filter audit events by actor, action, or target entity..."
                   value={auditSearch}
                   onChange={(e) => setAuditSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500"
+                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
                 />
               </div>
             </div>
 
             {/* Audit List */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl divide-y divide-slate-800/60 font-mono text-xs">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs divide-y divide-slate-100 font-mono text-xs">
               {auditEntries
                 .filter((a) =>
                   a.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
@@ -833,16 +823,16 @@ export const SuperAdminView: React.FC = () => {
                   a.details.toLowerCase().includes(auditSearch.toLowerCase())
                 )
                 .map((a) => (
-                  <div key={a.id} className="p-4 hover:bg-slate-800/30 transition flex items-start justify-between gap-4">
+                  <div key={a.id} className="p-4 hover:bg-slate-50/80 transition-colors flex items-start justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-purple-400 text-xs">{a.action}</span>
-                        <span className="text-slate-500">•</span>
-                        <span className="text-slate-200 font-semibold">{a.actor}</span>
+                        <span className="font-bold text-indigo-600 text-xs">{a.action}</span>
+                        <span className="text-slate-400">•</span>
+                        <span className="text-slate-900 font-semibold font-sans">{a.actor}</span>
                       </div>
-                      <div className="text-slate-300 text-[11px] font-sans">{a.details}</div>
-                      <div className="text-[10px] text-slate-500">
-                        Target: <span className="text-slate-400">{a.entity}</span> • IP: {a.ip}
+                      <div className="text-slate-600 text-[11px] font-sans">{a.details}</div>
+                      <div className="text-[10px] text-slate-400">
+                        Target: <span className="text-slate-600 font-semibold">{a.entity}</span> • IP: {a.ip}
                       </div>
                     </div>
                     <div className="text-[11px] text-slate-400 shrink-0 text-right">
@@ -854,24 +844,20 @@ export const SuperAdminView: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 6: Fleet Directory (Omniscient Super Admin access) */}
-        {/* ========================================================= */}
+        {/* TAB 6: Fleet Directory */}
         {activeTab === 'fleet_dir' && (
           <div className="h-full">
             <FleetManagementView />
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 7: Live Operations & Dispatch (Omniscient Super Admin access) */}
-        {/* ========================================================= */}
+        {/* TAB 7: Live Operations & Dispatch */}
         {activeTab === 'live_ops' && (
           <div className="h-full relative flex">
             <div className="absolute top-4 left-4 z-20">
               <button
                 onClick={() => setShowDispatchModal(true)}
-                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-2xl transition flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Dispatch New Trip</span>
@@ -884,16 +870,16 @@ export const SuperAdminView: React.FC = () => {
 
       {/* Modal 1: Create New Staff User */}
       {showAddUserModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <UserPlus className="w-4 h-4 text-purple-400" />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl p-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-indigo-600" />
                 <span>Create New Staff Account</span>
               </h3>
               <button
                 onClick={() => setShowAddUserModal(false)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -901,46 +887,46 @@ export const SuperAdminView: React.FC = () => {
 
             <form onSubmit={handleCreateUser} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Full Legal Name *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Full Legal Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Ramesh Deshpande"
                   value={newUserName}
                   onChange={(e) => setNewUserName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Corporate Email Address *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Corporate Email Address *</label>
                 <input
                   type="email"
                   required
                   placeholder="e.g. ramesh@fleetcommand.io"
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Mobile Contact Phone</label>
+                <label className="block text-slate-700 font-semibold mb-1">Mobile Contact Phone</label>
                 <input
                   type="tel"
                   placeholder="+91 98220 00000"
                   value={newUserPhone}
                   onChange={(e) => setNewUserPhone(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Assigned System Role *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Assigned System Role *</label>
                 <select
                   value={newUserRole}
                   onChange={(e) => setNewUserRole(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                 >
                   <option value="fleet_manager">Fleet Manager (Full resource & dispatch authority)</option>
                   <option value="supervisor">Supervisor (Read-only control room live feed & alerts)</option>
@@ -948,28 +934,28 @@ export const SuperAdminView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Temporary Initial Password</label>
+                <label className="block text-slate-700 font-semibold mb-1">Temporary Initial Password</label>
                 <input
                   type="text"
                   required
                   value={newUserPassword}
                   onChange={(e) => setNewUserPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">User will be prompted to change on first login</span>
+                <span className="text-[10px] text-slate-400 mt-1 block">User will be prompted to change on first login</span>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowAddUserModal(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-600/30"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-xs cursor-pointer"
                 >
                   Create & Send Invitation
                 </button>
@@ -981,60 +967,60 @@ export const SuperAdminView: React.FC = () => {
 
       {/* Modal 2: View DPDP Driver Consent Certificate */}
       {selectedConsentCert && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl p-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <FileCheck2 className="w-4 h-4 text-emerald-400" />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl p-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                <FileCheck2 className="w-4 h-4 text-emerald-600" />
                 <span>DPDP 2023 Location Consent Proof</span>
               </h3>
               <button
                 onClick={() => setSelectedConsentCert(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 text-xs font-mono">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-slate-400">Driver Name:</span>
-                <span className="font-bold text-white">{selectedConsentCert.name}</span>
+                <span className="text-slate-500">Driver Name:</span>
+                <span className="font-bold text-slate-900">{selectedConsentCert.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Mobile Phone:</span>
-                <span className="text-slate-200">{selectedConsentCert.phone}</span>
+                <span className="text-slate-500">Mobile Phone:</span>
+                <span className="text-slate-700">{selectedConsentCert.phone}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Licence No:</span>
-                <span className="text-slate-200">{selectedConsentCert.license}</span>
+                <span className="text-slate-500">Licence No:</span>
+                <span className="text-slate-700">{selectedConsentCert.license}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Policy Version:</span>
-                <span className="text-emerald-400 font-bold">{selectedConsentCert.version}</span>
+                <span className="text-slate-500">Policy Version:</span>
+                <span className="text-emerald-700 font-bold">{selectedConsentCert.version}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Consent Timestamp:</span>
-                <span className="text-slate-200">{selectedConsentCert.consentedAt}</span>
+                <span className="text-slate-500">Consent Timestamp:</span>
+                <span className="text-slate-700">{selectedConsentCert.consentedAt}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Device Hardware:</span>
-                <span className="text-slate-300">{selectedConsentCert.device}</span>
+                <span className="text-slate-500">Device Hardware:</span>
+                <span className="text-slate-600">{selectedConsentCert.device}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">IP Origin:</span>
-                <span className="text-slate-300">{selectedConsentCert.ip}</span>
+                <span className="text-slate-500">IP Origin:</span>
+                <span className="text-slate-600">{selectedConsentCert.ip}</span>
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-emerald-950/40 border border-emerald-800/40 rounded-xl text-[11px] text-emerald-300 leading-relaxed">
+            <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-800 leading-relaxed">
               ✓ Complies with Section 6 of India DPDP Act 2023. Notice given in Marathi, Hindi, and English. Driver explicit affirmative consent recorded with non-repudiation timestamp.
             </div>
 
             <div className="flex justify-end pt-4">
               <button
                 onClick={() => setSelectedConsentCert(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition"
               >
                 Close Audit Record
               </button>

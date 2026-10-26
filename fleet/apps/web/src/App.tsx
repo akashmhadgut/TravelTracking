@@ -63,47 +63,54 @@ export function App() {
     });
 
     socket.on('disconnect', () => {
-      setConnectionStatus('disconnected');
+      setConnectionStatus('reconnecting');
     });
 
-    // 1. Wait for server.hello, then fetch snapshot
-    socket.on('server.hello', async () => {
-      try {
-        const res = await fetch('/v1/live/buses');
-        if (res.ok) {
-          const data = await res.json();
-          applySnapshot(data.snapshot_rev, data.buses);
-        }
-      } catch (err) {
-        console.error('Failed to fetch snapshot:', err);
-      }
+    // Inbound GPS stream
+    socket.on('v1/live/snapshot', (snapshot) => {
+      applySnapshot(String(snapshot.snapshot_rev || snapshot.rev || '0'), snapshot.buses || []);
     });
 
-    // 2. Incoming coalesced batch updates
-    socket.on('bus.batch', (payload: { v: number; items: any[] }) => {
-      applyBatch(payload.items);
+    socket.on('v1/live/batch', (batch) => {
+      applyBatch(Array.isArray(batch) ? batch : batch.items || []);
     });
 
-    // 3. Immediate status changes
-    socket.on('bus.status', (payload: { bus_id: string; status: any; status_since: string; rev: string }) => {
-      applyStatus(payload.bus_id, payload.status, payload.status_since, payload.rev);
+    socket.on('v1/live/status', (statusEvent) => {
+      applyStatus(statusEvent.bus_id, statusEvent.status, statusEvent.status_since, String(statusEvent.rev));
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [applySnapshot, applyBatch, applyStatus, setConnectionStatus]);
+  }, [setConnectionStatus, applySnapshot, applyBatch, applyStatus]);
 
-  const busesList = Array.from(busesById.values()).filter((b) => {
-    const matchSearch = b.bus_id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchFilter = filterStatus === 'all' || b.status === filterStatus;
-    return matchSearch && matchFilter;
+  // Initial Snapshot fetch via REST
+  useEffect(() => {
+    fetch('/v1/live/buses')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.buses) {
+          applySnapshot(String(data.snapshot_rev || '0'), data.buses);
+        }
+      })
+      .catch((err) => console.error('Failed to load initial cars snapshot:', err));
+  }, [applySnapshot]);
+
+  // Car list filtered by search and status
+  const busesList = Array.from(busesById.values()).filter((bus) => {
+    const carInfo = CAR_NAMES[bus.bus_id] || { plate: bus.bus_id, model: '' };
+    const matchesSearch =
+      bus.bus_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      carInfo.plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      carInfo.model.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || bus.status === filterStatus;
+    return matchesSearch && matchesStatus;
   });
 
   const selectedBus = selectedBusId ? busesById.get(selectedBusId) : null;
 
+  // Counts by status
   const counts = {
-    total: busesById.size,
     moving: Array.from(busesById.values()).filter((b) => b.status === 'moving').length,
     stopped: Array.from(busesById.values()).filter((b) => b.status === 'stopped').length,
     stale: Array.from(busesById.values()).filter((b) => b.status === 'stale').length,
@@ -125,21 +132,21 @@ export function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      {/* Top Global Navigation Bar with Multi-User Role Switcher */}
-      <header className="h-14 bg-slate-900 border-b border-slate-800 px-5 flex items-center justify-between z-30">
+    <div className="flex flex-col h-screen w-screen bg-slate-50 text-slate-800 overflow-hidden font-sans">
+      {/* Top Global Navigation Bar */}
+      <header className="h-14 bg-white border-b border-slate-200/80 px-5 flex items-center justify-between z-30 shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-tr from-blue-600 to-emerald-500 rounded-lg text-white shadow">
+          <div className="p-2 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-lg text-white shadow-sm shadow-indigo-500/20">
             <Car className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm tracking-wide text-white">FleetCommand</span>
-              <span className="text-[10px] bg-slate-800 text-slate-300 border border-slate-700 px-1.5 py-0.2 rounded font-mono">
-                v1.0
+              <span className="font-extrabold text-sm tracking-tight text-slate-900">FleetCommand</span>
+              <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded font-mono font-semibold">
+                v1.0 Live
               </span>
             </div>
-            <div className="text-[10px] text-slate-400 font-medium">
+            <div className="text-[10px] text-slate-500 font-medium">
               {user.org_name}
             </div>
           </div>
@@ -150,26 +157,26 @@ export function App() {
           {/* Static Authenticated Role Badge */}
           <div className="flex items-center">
             {currentRole === 'super_admin' && (
-              <span className="px-3 py-1 bg-purple-950/80 border border-purple-600/50 text-purple-300 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                <Shield className="w-3.5 h-3.5 text-purple-400" />
+              <span className="px-3 py-1 bg-purple-50 border border-purple-200 text-purple-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+                <Shield className="w-3.5 h-3.5 text-purple-600" />
                 <span>Super Admin Console</span>
               </span>
             )}
             {currentRole === 'fleet_manager' && (
-              <span className="px-3 py-1 bg-blue-950/80 border border-blue-600/50 text-blue-300 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                <Briefcase className="w-3.5 h-3.5 text-blue-400" />
+              <span className="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+                <Briefcase className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Fleet Manager Desk</span>
               </span>
             )}
             {currentRole === 'supervisor' && (
-              <span className="px-3 py-1 bg-amber-950/80 border border-amber-600/50 text-amber-300 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                <Eye className="w-3.5 h-3.5 text-amber-400" />
+              <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+                <Eye className="w-3.5 h-3.5 text-amber-600" />
                 <span>Control Room Supervisor</span>
               </span>
             )}
             {currentRole === 'driver' && (
-              <span className="px-3 py-1 bg-emerald-950/80 border border-emerald-600/50 text-emerald-300 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+                <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Driver Terminal</span>
               </span>
             )}
@@ -178,36 +185,36 @@ export function App() {
           {/* Action Controls */}
           <button
             onClick={() => setShowReplayModal(true)}
-            className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-700"
+            className="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-200 shadow-2xs cursor-pointer"
           >
-            <History className="w-3.5 h-3.5 text-emerald-400" />
+            <History className="w-3.5 h-3.5 text-indigo-600" />
             <span>Trip Replay</span>
           </button>
 
           {/* Connection Status Badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border bg-slate-950 border-slate-800">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border bg-white border-slate-200 shadow-2xs">
             {connectionStatus === 'connected' ? (
               <>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-emerald-400 font-bold">Live</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-emerald-700 font-bold">Live</span>
               </>
             ) : (
               <>
-                <WifiOff className="w-3.5 h-3.5 text-rose-400" />
-                <span className="text-rose-400">Reconnecting</span>
+                <WifiOff className="w-3.5 h-3.5 text-rose-500" />
+                <span className="text-rose-600 font-semibold">Reconnecting</span>
               </>
             )}
           </div>
 
           {/* User Profile & Sign Out Button */}
-          <div className="flex items-center gap-2 pl-3 border-l border-slate-800">
+          <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
             <div className="text-right">
-              <div className="text-xs font-bold text-slate-200 leading-tight">{user.name}</div>
-              <div className="text-[10px] text-slate-400 font-mono leading-tight">{user.email || user.phone}</div>
+              <div className="text-xs font-bold text-slate-900 leading-tight">{user.name}</div>
+              <div className="text-[10px] text-slate-500 font-mono leading-tight">{user.email || user.phone}</div>
             </div>
             <button
               onClick={logout}
-              className="p-1.5 bg-slate-800 hover:bg-rose-950/70 hover:text-rose-400 text-slate-400 rounded-lg border border-slate-700 transition"
+              className="p-1.5 bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-400 rounded-lg border border-slate-200 transition cursor-pointer"
               title="Sign Out to Login Screen"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -218,26 +225,26 @@ export function App() {
 
       {/* Fleet Manager Sub-Navigation Bar */}
       {currentRole === 'fleet_manager' && (
-        <div className="h-11 bg-slate-900/95 border-b border-slate-800 px-6 flex items-center justify-between z-20">
+        <div className="h-11 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between z-20 shadow-2xs">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Fleet Operations Mode:</span>
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Fleet Operations Mode:</span>
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
               <button
                 onClick={() => setManagerSubView('resources')}
-                className={`px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   managerSubView === 'resources'
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <span>📋 Fleet Directory (Buses, Drivers, Routes)</span>
+                <span>📋 Cars Directory, Drivers & Routes</span>
               </button>
               <button
                 onClick={() => setManagerSubView('live_ops')}
-                className={`px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   managerSubView === 'live_ops'
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <span>🗺️ Live Map & Real-time Tracking</span>
@@ -247,16 +254,16 @@ export function App() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowDispatchModal(true)}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-md transition"
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs transition cursor-pointer"
             >
               + Dispatch Trip
             </button>
             <button
               onClick={handleExportCsv}
-              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs flex items-center gap-1 border border-slate-700"
+              className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 rounded-lg text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer"
               title="Export CSV"
             >
-              <Download className="w-3.5 h-3.5 text-blue-400" />
+              <Download className="w-3.5 h-3.5 text-indigo-600" />
             </button>
           </div>
         </div>
@@ -270,7 +277,7 @@ export function App() {
         {/* View 2: Driver Mobile App View */}
         {currentRole === 'driver' && <DriverPhoneSimulator />}
 
-        {/* View 3: Fleet Manager Resource Management (Buses, Drivers, Routes) */}
+        {/* View 3: Fleet Manager Resource Management (Cars, Drivers, Routes) */}
         {currentRole === 'fleet_manager' && managerSubView === 'resources' && (
           <FleetManagementView />
         )}
@@ -279,13 +286,13 @@ export function App() {
         {((currentRole === 'fleet_manager' && managerSubView === 'live_ops') || currentRole === 'supervisor') && (
           <>
             {/* Sidebar: Fleet List & Search */}
-            <aside className="w-96 flex flex-col border-r border-slate-800 bg-slate-900/90 backdrop-blur z-10">
-              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+            <aside className="w-96 flex flex-col border-r border-slate-200 bg-white z-10 shadow-sm">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <h2 className="font-bold text-sm text-white">
+                  <h2 className="font-bold text-sm text-slate-900">
                     {currentRole === 'fleet_manager' ? 'Fleet Operations Desk' : 'Control Room Live Feed'}
                   </h2>
-                  <p className="text-[11px] text-slate-400 font-mono">
+                  <p className="text-[11px] text-slate-500 font-mono">
                     {currentRole === 'fleet_manager' ? 'Full Dispatch & PII Access' : 'Read-Only Supervisor Scope'}
                   </p>
                 </div>
@@ -293,43 +300,43 @@ export function App() {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setShowDispatchModal(true)}
-                      className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-md transition"
+                      className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs transition cursor-pointer"
                     >
                       + Dispatch Trip
                     </button>
                     <button
                       onClick={handleExportCsv}
-                      className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs flex items-center gap-1 border border-slate-700"
+                      className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 rounded-lg text-xs flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer"
                       title="Export CSV"
                     >
-                      <Download className="w-3.5 h-3.5 text-blue-400" />
+                      <Download className="w-3.5 h-3.5 text-indigo-600" />
                     </button>
                   </div>
                 )}
               </div>
 
               {/* Fleet KPI Quick Bar */}
-              <div className="grid grid-cols-4 p-3 gap-2 border-b border-slate-800/80 text-center text-xs">
-                <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-                  <div className="text-emerald-400 font-bold">{counts.moving}</div>
-                  <div className="text-[10px] text-slate-400 uppercase">Moving</div>
+              <div className="grid grid-cols-4 p-3 gap-2 border-b border-slate-100 text-center text-xs">
+                <div className="bg-emerald-50/60 p-2 rounded-lg border border-emerald-100">
+                  <div className="text-emerald-700 font-extrabold text-sm">{counts.moving}</div>
+                  <div className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider">Moving</div>
                 </div>
-                <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-                  <div className="text-amber-400 font-bold">{counts.stopped}</div>
-                  <div className="text-[10px] text-slate-400 uppercase">Stopped</div>
+                <div className="bg-amber-50/60 p-2 rounded-lg border border-amber-100">
+                  <div className="text-amber-700 font-extrabold text-sm">{counts.stopped}</div>
+                  <div className="text-[9px] text-amber-600 font-bold uppercase tracking-wider">Stopped</div>
                 </div>
-                <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-                  <div className="text-orange-400 font-bold">{counts.stale}</div>
-                  <div className="text-[10px] text-slate-400 uppercase">Stale</div>
+                <div className="bg-orange-50/60 p-2 rounded-lg border border-orange-100">
+                  <div className="text-orange-700 font-extrabold text-sm">{counts.stale}</div>
+                  <div className="text-[9px] text-orange-600 font-bold uppercase tracking-wider">Stale</div>
                 </div>
-                <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-                  <div className="text-rose-400 font-bold">{counts.offline}</div>
-                  <div className="text-[10px] text-slate-400 uppercase">Offline</div>
+                <div className="bg-slate-100 p-2 rounded-lg border border-slate-200">
+                  <div className="text-slate-600 font-extrabold text-sm">{counts.offline}</div>
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Offline</div>
                 </div>
               </div>
 
               {/* Search & Filter Bar */}
-              <div className="p-3 border-b border-slate-800 flex gap-2">
+              <div className="p-3 border-b border-slate-100 flex gap-2">
                 <div className="relative flex-1">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                   <input
@@ -337,13 +344,13 @@ export function App() {
                     placeholder="Filter by Car / Plate..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 bg-slate-950 text-xs rounded border border-slate-800 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+                    className="w-full pl-8 pr-3 py-1.5 bg-slate-50 text-xs rounded-lg border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
                   />
                 </div>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-slate-950 text-xs px-2 py-1.5 rounded border border-slate-800 text-slate-300 focus:outline-none"
+                  className="bg-slate-50 text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 focus:outline-none focus:border-indigo-600"
                 >
                   <option value="all">All</option>
                   <option value="moving">Moving</option>
@@ -354,7 +361,7 @@ export function App() {
               </div>
 
               {/* Car List */}
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-800/50">
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
                 {busesList.map((bus) => {
                   const isSelected = bus.bus_id === selectedBusId;
                   const carInfo = CAR_NAMES[bus.bus_id] || { plate: bus.bus_id.slice(0, 10), model: 'Fleet Car' };
@@ -365,20 +372,20 @@ export function App() {
                       onClick={() => setSelectedBusId(bus.bus_id)}
                       className={`p-3.5 cursor-pointer transition-colors ${
                         isSelected
-                          ? 'bg-blue-500/10 border-l-4 border-blue-500'
-                          : 'hover:bg-slate-800/50'
+                          ? 'bg-indigo-50/70 border-l-4 border-indigo-600'
+                          : 'hover:bg-slate-50/80 border-l-4 border-transparent'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-slate-800 rounded-lg text-blue-400 border border-slate-700">
+                          <div className={`p-1.5 rounded-lg border ${isSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-indigo-600 border-slate-200'}`}>
                             <Car className="w-3.5 h-3.5" />
                           </div>
                           <div>
-                            <div className="font-bold text-xs font-mono text-white">
+                            <div className="font-bold text-xs font-mono text-slate-900">
                               {carInfo.plate}
                             </div>
-                            <div className="text-[10px] text-slate-400 font-sans">
+                            <div className="text-[10px] text-slate-500 font-sans">
                               {carInfo.model}
                             </div>
                           </div>
@@ -387,28 +394,28 @@ export function App() {
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                             bus.status === 'moving'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : bus.status === 'stopped'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
                               : bus.status === 'stale'
-                              ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                              : 'bg-slate-100 text-slate-600 border border-slate-200'
                           }`}
                         >
                           {bus.status}
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-400">
+                      <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-500 font-medium">
                         <div className="flex items-center gap-1">
-                          <Gauge className="w-3 h-3 text-slate-500" />
+                          <Gauge className="w-3 h-3 text-slate-400" />
                           <span>{bus.speed_kmh?.toFixed(0) || 0} km/h</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Battery className="w-3 h-3 text-slate-500" />
+                          <Battery className="w-3 h-3 text-slate-400" />
                           <span>{bus.battery_pct ?? '--'}%</span>
                         </div>
-                        <div className="flex items-center gap-1 justify-end font-mono text-[10px] text-slate-500">
+                        <div className="flex items-center gap-1 justify-end font-mono text-[10px] text-slate-400">
                           rev #{bus.rev}
                         </div>
                       </div>
@@ -424,24 +431,24 @@ export function App() {
 
               {/* Selected Car Floating Detail Card */}
               {selectedBus && (
-                <div className="absolute top-4 right-4 w-80 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl shadow-2xl p-4 text-xs z-20">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                <div className="absolute top-4 right-4 w-80 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4 text-xs z-20">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400">
+                      <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-600">
                         <Car className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-100 font-mono text-sm">
+                        <h3 className="font-bold text-slate-900 font-mono text-sm">
                           {CAR_NAMES[selectedBus.bus_id]?.plate || selectedBus.bus_id}
                         </h3>
-                        <p className="text-[10px] text-slate-400">
+                        <p className="text-[10px] text-slate-500">
                           {CAR_NAMES[selectedBus.bus_id]?.model || 'Electric Car'} • Live Telemetry
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setSelectedBusId(null)}
-                      className="text-slate-400 hover:text-white p-1"
+                      className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
                     >
                       ✕
                     </button>
@@ -449,32 +456,32 @@ export function App() {
 
                   <div className="space-y-2.5">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Status</span>
-                      <span className="font-bold uppercase text-emerald-400">{selectedBus.status}</span>
+                      <span className="text-slate-500 font-medium">Status</span>
+                      <span className="font-bold uppercase text-emerald-600">{selectedBus.status}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Current Speed</span>
-                      <span className="font-mono">{selectedBus.speed_kmh?.toFixed(1) || 0} km/h</span>
+                      <span className="text-slate-500 font-medium">Current Speed</span>
+                      <span className="font-mono font-semibold text-slate-900">{selectedBus.speed_kmh?.toFixed(1) || 0} km/h</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Battery Level</span>
-                      <span className="font-mono">{selectedBus.battery_pct}%</span>
+                      <span className="text-slate-500 font-medium">Battery Level</span>
+                      <span className="font-mono font-semibold text-slate-900">{selectedBus.battery_pct}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">GPS Accuracy</span>
-                      <span className="font-mono">{selectedBus.accuracy_m?.toFixed(1) || 0} m</span>
+                      <span className="text-slate-500 font-medium">GPS Accuracy</span>
+                      <span className="font-mono text-slate-700">{selectedBus.accuracy_m?.toFixed(1) || 0} m</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Coordinates</span>
-                      <span className="font-mono text-[10px]">
+                      <span className="text-slate-500 font-medium">Coordinates</span>
+                      <span className="font-mono text-[10px] text-slate-700">
                         {selectedBus.lat.toFixed(5)}, {selectedBus.lng.toFixed(5)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Monotonic Version</span>
-                      <span className="font-mono text-emerald-400">rev #{selectedBus.rev}</span>
+                      <span className="text-slate-500 font-medium">Monotonic Version</span>
+                      <span className="font-mono text-indigo-600 font-semibold">rev #{selectedBus.rev}</span>
                     </div>
-                    <div className="flex justify-between border-t border-slate-800 pt-2 text-[10px] text-slate-500">
+                    <div className="flex justify-between border-t border-slate-100 pt-2 text-[10px] text-slate-400">
                       <span>Last Fix</span>
                       <span>{new Date(selectedBus.recorded_at).toLocaleTimeString()}</span>
                     </div>

@@ -61,35 +61,35 @@ export const TripReplayModal: React.FC<TripReplayModalProps> = ({ tripId, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl text-slate-100 text-xs">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl text-slate-800 text-xs">
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
-            <h2 className="font-bold text-sm text-white">Trip History Replay Scrubber</h2>
-            <p className="text-[11px] text-slate-400 font-mono">Trip #{tripId.slice(0, 18)}...</p>
+            <h2 className="font-bold text-sm text-slate-900">Trip History Replay Scrubber</h2>
+            <p className="text-[11px] text-slate-500 font-mono">Trip #{tripId.slice(0, 18)}...</p>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded">
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Playback HUD Card */}
         <div className="p-6 space-y-4">
-          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-950/80 rounded-lg border border-slate-800 text-center">
+          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
             <div>
-              <span className="text-slate-400 block text-[10px] uppercase">Telemetry Timestamp</span>
-              <span className="font-mono font-bold text-slate-200">
+              <span className="text-slate-500 block text-[10px] uppercase font-semibold">Telemetry Timestamp</span>
+              <span className="font-mono font-bold text-slate-900">
                 {new Date(currentPoint.recorded_at).toLocaleTimeString()}
               </span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[10px] uppercase">Replay Speed</span>
-              <span className="font-mono font-bold text-emerald-400">{currentPoint.speed_kmh} km/h</span>
+              <span className="text-slate-500 block text-[10px] uppercase font-semibold">Replay Speed</span>
+              <span className="font-mono font-bold text-indigo-600">{currentPoint.speed_kmh} km/h</span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[10px] uppercase">Coordinates</span>
-              <span className="font-mono text-[10px] text-slate-300">
+              <span className="text-slate-500 block text-[10px] uppercase font-semibold">Coordinates</span>
+              <span className="font-mono text-[10px] text-slate-700">
                 {currentPoint.lat.toFixed(4)}, {currentPoint.lng.toFixed(4)}
               </span>
             </div>
@@ -97,7 +97,7 @@ export const TripReplayModal: React.FC<TripReplayModalProps> = ({ tripId, onClos
 
           {/* Draggable Progress Timeline Scrubber */}
           <div className="space-y-1.5">
-            <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+            <div className="flex justify-between text-[11px] text-slate-500 font-mono">
               <span>Point {currentIndex + 1} of {points.length}</span>
               <span>{Math.round(((currentIndex + 1) / (points.length || 1)) * 100)}%</span>
             </div>
@@ -107,16 +107,16 @@ export const TripReplayModal: React.FC<TripReplayModalProps> = ({ tripId, onClos
               max={Math.max(0, points.length - 1)}
               value={currentIndex}
               onChange={(e) => setCurrentIndex(Number(e.target.value))}
-              className="w-full accent-emerald-500 cursor-pointer"
+              className="w-full accent-indigo-600 cursor-pointer"
             />
           </div>
 
-          {/* Controls: Play, Pause, Speed Multiplier (1x, 4x, 16x) */}
-          <div className="flex items-center justify-between border-t border-slate-800 pt-4">
+          {/* Controls: Play, Pause, Speed Multiplier */}
+          <div className="flex items-center justify-between border-t border-slate-100 pt-4">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg flex items-center gap-1.5"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                 <span>{isPlaying ? 'Pause' : 'Play Replay'}</span>
@@ -127,23 +127,23 @@ export const TripReplayModal: React.FC<TripReplayModalProps> = ({ tripId, onClos
                   setCurrentIndex(0);
                   setIsPlaying(false);
                 }}
-                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg"
+                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl cursor-pointer"
                 title="Restart"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Speed Multipliers (Section 10.3: 1x, 4x, 16x) */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+            {/* Speed Multipliers */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
               {([1, 4, 16] as const).map((spd) => (
                 <button
                   key={spd}
                   onClick={() => setSpeedMultiplier(spd)}
-                  className={`px-2.5 py-1 rounded text-[11px] font-bold ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition ${
                     speedMultiplier === spd
-                      ? 'bg-emerald-500 text-white'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <FastForward className="w-2.5 h-2.5 inline mr-0.5" />
@@ -153,17 +153,17 @@ export const TripReplayModal: React.FC<TripReplayModalProps> = ({ tripId, onClos
             </div>
           </div>
 
-          {/* Stop Events Timeline Marker (Section 10.3) */}
+          {/* Stop Events Timeline Marker */}
           {stopEvents.length > 0 && (
-            <div className="border-t border-slate-800 pt-3">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2">
+            <div className="border-t border-slate-100 pt-3">
+              <span className="text-[10px] uppercase font-bold text-slate-500 block mb-2">
                 Planned Stop Corridor Events
               </span>
               <div className="space-y-1.5 max-h-28 overflow-y-auto">
                 {stopEvents.map((evt, idx) => (
-                  <div key={idx} className="flex items-center gap-2 p-2 bg-slate-950/60 rounded border border-slate-800/80">
-                    <MapPin className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                    <span className="font-semibold text-slate-200">{evt.name}</span>
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <MapPin className="w-3 h-3 text-indigo-600 flex-shrink-0" />
+                    <span className="font-semibold text-slate-800">{evt.name}</span>
                     <span className="text-[10px] text-slate-500 ml-auto font-mono">
                       Arr: {new Date(evt.arrived_at).toLocaleTimeString()}
                     </span>

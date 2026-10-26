@@ -72,7 +72,7 @@ export const DriverPhoneSimulator: React.FC = () => {
   }, [isTripActive]);
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-slate-950 p-6">
+    <div className="flex-1 flex items-center justify-center bg-slate-50 p-6">
       {/* Mobile Device Frame */}
       <div className="w-[380px] h-[720px] bg-slate-900 border-4 border-slate-700 rounded-[40px] shadow-2xl overflow-hidden flex flex-col relative text-slate-100 font-sans">
         {/* Phone Notch & Status Bar */}
