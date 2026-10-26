@@ -1,0 +1,37 @@
+# Section 4, 8 & 16: Production Docker Compose (PostgreSQL 16 + PostGIS 3.4)
+version: '3.9'
+services:
+  postgres-postgis:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: fleetcommand-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fleet_admin
+      POSTGRES_PASSWORD: change_me_in_secret_manager
+      POSTGRES_DB: fleetcommand_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./create-monthly-partitions.sql:/docker-entrypoint-initdb.d/10-partitions.sql:ro
+
+  fleetcommand-app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: fleetcommand-monolith
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SQL_HOST: postgres-postgis
+      SQL_DB_NAME: fleetcommand_prod
+      SQL_USER: fleet_admin
+      SQL_PASSWORD: change_me_in_secret_manager
+    depends_on:
+      - postgres-postgis
+
+volumes:
+  pgdata:

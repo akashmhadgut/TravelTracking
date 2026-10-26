@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "FleetCommand Driver",
+    "slug": "fleetcommand-driver",
+    "version": "2.0.4",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "in.deccantransit.fleetcommand.driver",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "FleetCommand collects bus location during active assigned trips for passenger safety and depot operations.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "FleetCommand requires background location during active bus trips so the control room can monitor bus progress while your screen is locked.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "package": "in.deccantransit.fleetcommand.driver",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "WAKE_LOCK",
+        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow FleetCommand to track bus location during active trips.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      "expo-sqlite",
+      "expo-secure-store"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "FleetCommand — Live Bus Tracking & Fleet Operations",
+  "description": "Production fleet management, live bus GPS ingestion, trip lifecycle, anti-spoofing quarantine, and real-time operations console.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
