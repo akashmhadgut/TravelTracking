@@ -2,6 +2,10 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import {
   serializerCompiler,
   validatorCompiler,
@@ -20,6 +24,12 @@ import { fleetRoutes } from './modules/fleet/fleetRoutes.js';
 import { tripRoutes } from './modules/trips/tripRoutes.js';
 import { alertRoutes } from './modules/alerts/alertRoutes.js';
 import { reportRoutes } from './modules/reports/reportRoutes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const webDistPath = path.resolve(__dirname, '../../../apps/web/dist');
+const altDistPath = path.resolve(process.cwd(), 'apps/web/dist');
+const distPath = fs.existsSync(webDistPath) ? webDistPath : altDistPath;
 
 dotenv.config();
 
@@ -275,6 +285,22 @@ fastify.post(
 
 // GET /v1/healthz
 fastify.get('/v1/healthz', async () => ({ status: 'ok', uptime: process.uptime() }));
+
+// Production Static Frontend Hosting (Serves Web Dashboard SPA directly)
+if (fs.existsSync(distPath)) {
+  await fastify.register(fastifyStatic, {
+    root: distPath,
+    prefix: '/',
+    wildcard: false,
+  });
+
+  fastify.get('/*', async (request, reply) => {
+    if (request.url.startsWith('/v1') || request.url.startsWith('/socket.io')) {
+      return reply.status(404).send({ error: 'Endpoint Not Found' });
+    }
+    return reply.sendFile('index.html');
+  });
+}
 
 const PORT = Number(process.env.PORT) || 3000;
 await fastify.listen({ port: PORT, host: '0.0.0.0' });

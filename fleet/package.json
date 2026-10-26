@@ -13,7 +13,8 @@
     "dev:web": "npm --workspace=apps/web run dev",
     "dev:driver": "npm --workspace=apps/driver run dev",
     "dev:simulator": "npm --workspace=apps/simulator run dev",
-    "build": "npm run --workspaces --if-present build",
+    "build": "npm --workspace=packages/contracts run build && npm --workspace=apps/web run build && npm --workspace=apps/api run build",
+    "start": "node apps/api/dist/server.js",
     "typecheck": "npm run --workspaces --if-present typecheck",
     "test": "npm run --workspaces --if-present test",
     "lint": "npm run --workspaces --if-present lint"
