@@ -61,10 +61,10 @@ export const TripReplayModal: React.FC<TripReplayModalProps> = ({ tripId, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl text-slate-800 text-xs">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl max-h-[90dvh] overflow-y-auto shadow-2xl text-slate-800 text-xs">
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
             <h2 className="font-bold text-sm text-slate-900">Trip History Replay Scrubber</h2>
             <p className="text-[11px] text-slate-500 font-mono">Trip #{tripId.slice(0, 18)}...</p>
@@ -75,8 +75,8 @@ export const TripReplayModal: React.FC<TripReplayModalProps> = ({ tripId, onClos
         </div>
 
         {/* Playback HUD Card */}
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+        <div className="p-4 sm:p-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
             <div>
               <span className="text-slate-500 block text-[10px] uppercase font-semibold">Telemetry Timestamp</span>
               <span className="font-mono font-bold text-slate-900">

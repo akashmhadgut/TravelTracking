@@ -205,51 +205,51 @@ export const FleetManagementView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-6 text-slate-800 text-xs font-sans">
+    <div className="flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-6 space-y-4 sm:space-y-6 text-slate-800 text-xs font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="font-extrabold text-lg text-slate-900 tracking-tight">Fleet & Resource Administration</h1>
+          <h1 className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">Fleet & Resource Administration</h1>
           <p className="text-slate-500 text-xs">
             <strong className="text-indigo-600">Fleet Manager Authority (§7.3)</strong>: Add and configure cars, enroll drivers with licenses, and build routes.
           </p>
         </div>
 
         {/* Sub-Tab Navigation */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('buses')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
               activeTab === 'buses'
                 ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Car className="w-3.5 h-3.5" />
+            <Car className="w-3.5 h-3.5 shrink-0" />
             <span>1. Cars / Vehicles ({buses.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('drivers')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
               activeTab === 'drivers'
                 ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <User className="w-3.5 h-3.5" />
+            <User className="w-3.5 h-3.5 shrink-0" />
             <span>2. Drivers ({drivers.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('routes')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
               activeTab === 'routes'
                 ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <MapPin className="w-3.5 h-3.5" />
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
             <span>3. Routes ({routes.length})</span>
           </button>
         </div>
@@ -257,22 +257,23 @@ export const FleetManagementView: React.FC = () => {
 
       {/* TAB 1: CARS MANAGEMENT */}
       {activeTab === 'buses' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="font-bold text-sm text-slate-900">Fleet Cars & Vehicle Registration Roster (§4 & §7.3)</h2>
               <p className="text-[11px] text-slate-500">Unique registration numbers enforced per vehicle.</p>
             </div>
             <button
               onClick={() => setShowAddBusModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ Add New Car</span>
             </button>
           </div>
 
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <table className="w-full text-left border-collapse min-w-[560px]">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500 text-[11px] uppercase font-semibold">
                 <th className="pb-3">Registration No</th>
@@ -298,27 +299,29 @@ export const FleetManagementView: React.FC = () => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {/* TAB 2: DRIVERS MANAGEMENT */}
       {activeTab === 'drivers' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="font-bold text-sm text-slate-900">Driver Roster & DPDP Consent Compliance (§7.3 & §12.2)</h2>
               <p className="text-[11px] text-slate-500">Fleet Managers have full unmasked access to commercial license numbers and addresses.</p>
             </div>
             <button
               onClick={() => setShowAddDriverModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ Enroll New Driver</span>
             </button>
           </div>
 
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <table className="w-full text-left border-collapse min-w-[620px]">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500 text-[11px] uppercase font-semibold">
                 <th className="pb-3">Driver Name</th>
@@ -353,27 +356,28 @@ export const FleetManagementView: React.FC = () => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {/* TAB 3: ROUTES & STOPS MANAGEMENT */}
       {activeTab === 'routes' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="font-bold text-sm text-slate-900">Route Corridors & Versioned Stops (§4 & §10.3)</h2>
               <p className="text-[11px] text-slate-500">Routes are versioned so modifying stops never alters historical trip logs.</p>
             </div>
             <button
               onClick={() => setShowAddRouteModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>+ Create Route Corridor</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {routes.map((r) => (
               <div key={r.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
@@ -410,7 +414,7 @@ export const FleetManagementView: React.FC = () => {
       {/* MODAL: ADD CAR */}
       {showAddBusModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleAddBus} className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+          <form onSubmit={handleAddBus} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 w-full max-w-md space-y-4 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <h3 className="font-bold text-base text-slate-900">Add New Car Vehicle</h3>
             <div>
               <label className="text-[11px] text-slate-600 block mb-1 font-semibold">Vehicle Registration Number</label>
@@ -463,7 +467,7 @@ export const FleetManagementView: React.FC = () => {
       {/* MODAL: ENROLL DRIVER */}
       {showAddDriverModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleAddDriver} className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+          <form onSubmit={handleAddDriver} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 w-full max-w-md space-y-4 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <h3 className="font-bold text-base text-slate-900">Enroll New Driver</h3>
             <div>
               <label className="text-[11px] text-slate-600 block mb-1 font-semibold">Driver Full Name</label>
@@ -530,7 +534,7 @@ export const FleetManagementView: React.FC = () => {
       {/* MODAL: CREATE ROUTE */}
       {showAddRouteModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleAddRoute} className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+          <form onSubmit={handleAddRoute} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 w-full max-w-md space-y-4 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <h3 className="font-bold text-base text-slate-900">Create Route Corridor</h3>
             <div>
               <label className="text-[11px] text-slate-600 block mb-1 font-semibold">Route Code</label>

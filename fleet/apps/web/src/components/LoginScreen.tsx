@@ -60,20 +60,20 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-gradient-to-br from-slate-50 via-indigo-50/40 to-slate-100 flex flex-col justify-center items-center px-4 relative overflow-hidden font-sans">
+    <div className="min-h-dvh w-screen bg-gradient-to-br from-slate-50 via-indigo-50/40 to-slate-100 flex flex-col justify-center items-center p-3 sm:px-4 relative overflow-y-auto font-sans">
       {/* Background subtle glowing radial gradients */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Login Card */}
-      <div className="w-full max-w-md bg-white/90 border border-slate-200/80 rounded-2xl shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] p-8 z-10 backdrop-blur-xl">
+      <div className="w-full max-w-md bg-white/95 border border-slate-200/80 rounded-2xl shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] p-5 sm:p-8 z-10 backdrop-blur-xl my-4">
         {/* Brand Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl text-white shadow-md shadow-indigo-500/20">
+        <div className="flex items-center gap-3 mb-5 sm:mb-6">
+          <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl text-white shadow-md shadow-indigo-500/20 shrink-0">
             <Car className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               FleetCommand <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded font-mono font-semibold">v1.0 Live</span>
             </h1>
             <p className="text-xs text-slate-500">Smart EV & Car Fleet Telemetry Desk</p>
@@ -81,7 +81,7 @@ export const LoginScreen: React.FC = () => {
         </div>
 
         {/* Quick Demo Role Auto-fill Selector */}
-        <div className="mb-6 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+        <div className="mb-5 sm:mb-6 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center justify-between">
             <span>Quick Demo Role Fill:</span>
             <span className="text-[10px] text-indigo-600 font-semibold font-mono">1-Click Test</span>

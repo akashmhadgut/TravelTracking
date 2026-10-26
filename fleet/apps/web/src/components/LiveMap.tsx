@@ -31,7 +31,15 @@ export const LiveMap: React.FC = () => {
     map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
     mapInstance.current = map;
 
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    if (mapContainer.current) {
+      resizeObserver.observe(mapContainer.current);
+    }
+
     return () => {
+      resizeObserver.disconnect();
       // Clean up markers
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current.clear();

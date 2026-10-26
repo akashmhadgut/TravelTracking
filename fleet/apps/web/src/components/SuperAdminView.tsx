@@ -184,74 +184,74 @@ export const SuperAdminView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden text-slate-800 font-sans">
       {/* Super Admin Top Sub-Navigation Bar */}
-      <div className="bg-white border-b border-slate-200/80 px-6 py-2.5 flex items-center justify-between z-20 shrink-0 shadow-2xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto">
+      <div className="bg-white border-b border-slate-200/80 px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between z-20 shrink-0 shadow-2xs gap-3 overflow-x-auto">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => setActiveTab('company')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'company'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
-            <span>1. Company Account</span>
+            <span>1. Company</span>
           </button>
 
           <button
             onClick={() => setActiveTab('settings')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'settings'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>2. System Settings</span>
+            <span>2. Settings</span>
           </button>
 
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'users'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
-            <span>3. Staff Users ({users.length})</span>
+            <span>3. Staff ({users.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('consents')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'consents'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <FileCheck2 className="w-3.5 h-3.5" />
-            <span>4. Driver Consents</span>
+            <span>4. Consents</span>
           </button>
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'audit'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span>5. Audit Log ({auditEntries.length})</span>
+            <span>5. Audit ({auditEntries.length})</span>
           </button>
 
-          <div className="h-4 w-px bg-slate-200 mx-2" />
+          <div className="h-4 w-px bg-slate-200 mx-1 shrink-0" />
 
           {/* Super Admin Omniscient Access */}
           <button
             onClick={() => setActiveTab('fleet_dir')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'fleet_dir'
                 ? 'bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -263,21 +263,21 @@ export const SuperAdminView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('live_ops')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'live_ops'
                 ? 'bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <MapPin className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Live Operations Desk</span>
+            <span>Live Operations</span>
           </button>
         </div>
 
         {savedNotice && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold animate-pulse">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>{savedNotice}</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold animate-pulse shrink-0">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate max-w-[200px] sm:max-w-none">{savedNotice}</span>
           </div>
         )}
       </div>
@@ -286,24 +286,24 @@ export const SuperAdminView: React.FC = () => {
       <div className="flex-1 overflow-y-auto">
         {/* TAB 1: Company Account Setup */}
         {activeTab === 'company' && (
-          <div className="max-w-4xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-indigo-600 shrink-0" />
                   <span>Company Account & Organization Profile</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
                   Owner authority: Setup legal entity identity, contact details, operating hours, and localized timezone.
                 </p>
               </div>
-              <span className="text-[10px] font-mono bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg font-bold">
+              <span className="text-[10px] font-mono bg-indigo-50 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg font-bold self-start sm:self-auto shrink-0">
                 TENANT ID: 0192f0a1-7c3e-7c11-9d0a
               </span>
             </div>
 
-            <form onSubmit={handleSaveCompany} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xs">
-              <div className="grid grid-cols-2 gap-5">
+            <form onSubmit={handleSaveCompany} className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-6 shadow-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Registered Company Name *
@@ -369,7 +369,7 @@ export const SuperAdminView: React.FC = () => {
                   <Clock className="w-4 h-4 text-indigo-600" />
                   <span>Fleet Operating Window & Dispatch Hours</span>
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-xs text-slate-500 mb-1 font-medium">Daily Operations Start</label>
                     <input
@@ -405,7 +405,7 @@ export const SuperAdminView: React.FC = () => {
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Save Organization Account Details</span>
@@ -417,11 +417,11 @@ export const SuperAdminView: React.FC = () => {
 
         {/* TAB 2: System Settings & Safety Thresholds */}
         {activeTab === 'settings' && (
-          <div className="max-w-4xl mx-auto p-8 space-y-6">
+          <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-indigo-600 shrink-0" />
                   <span>Global Safety Limits & GPS Retention Policies</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
@@ -430,14 +430,14 @@ export const SuperAdminView: React.FC = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSaveSettings} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xs">
+            <form onSubmit={handleSaveSettings} className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-6 shadow-xs">
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-3 flex items-center gap-1.5">
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                   <span>Real-Time Alert Thresholds (Spec §4)</span>
                 </h3>
 
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <label className="block text-xs font-bold text-slate-800 mb-1">
                       Fleet Overspeed Threshold (km/h)
@@ -487,7 +487,7 @@ export const SuperAdminView: React.FC = () => {
                   <span>Telemetry Retention & Signal Timing (Spec §4 & §12)</span>
                 </h3>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <label className="block text-xs font-bold text-slate-800 mb-1">
                       Raw GPS Retention (Days)
@@ -537,7 +537,7 @@ export const SuperAdminView: React.FC = () => {
 
               {/* Compliance Audit Retention */}
               <div className="border-t border-slate-100 pt-5">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-800">
                       Compliance Audit Log Retention Period
@@ -563,7 +563,7 @@ export const SuperAdminView: React.FC = () => {
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Apply & Enforce System Policies</span>
@@ -575,11 +575,11 @@ export const SuperAdminView: React.FC = () => {
 
         {/* TAB 3: Staff User Management */}
         {activeTab === 'users' && (
-          <div className="max-w-5xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-indigo-600 shrink-0" />
                   <span>Staff User Administration & RBAC Hierarchy</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
@@ -588,10 +588,10 @@ export const SuperAdminView: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowAddUserModal(true)}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
               >
                 <UserPlus className="w-4 h-4" />
-                <span>+ Create New Staff User</span>
+                <span>+ Create Staff User</span>
               </button>
             </div>
 
@@ -611,93 +611,95 @@ export const SuperAdminView: React.FC = () => {
 
             {/* Users Table */}
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-                    <th className="p-4">Staff Member</th>
-                    <th className="p-4">Contact Phone</th>
-                    <th className="p-4">System Role</th>
-                    <th className="p-4">Account Status</th>
-                    <th className="p-4">Last Activity</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
-                  {users
-                    .filter((u) => u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(userSearchQuery.toLowerCase()))
-                    .map((user) => (
-                      <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="p-4">
-                          <div className="font-bold text-slate-900 text-sm font-sans">{user.name}</div>
-                          <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
-                            <Mail className="w-3 h-3 text-slate-400" />
-                            <span>{user.email}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 font-mono text-slate-700">{user.phone}</td>
-                        <td className="p-4">
-                          <span
-                            className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${
-                              user.role === 'super_admin'
-                                ? 'bg-purple-50 border-purple-200 text-purple-700'
-                                : user.role === 'fleet_manager'
-                                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                                : 'bg-amber-50 border-amber-200 text-amber-700'
-                            }`}
-                          >
-                            {user.role === 'super_admin' ? 'Super Admin' : user.role === 'fleet_manager' ? 'Fleet Manager' : 'Supervisor'}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                              user.status === 'active'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-rose-50 text-rose-700 border border-rose-200'
-                            }`}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="p-4 text-slate-500 font-mono text-[11px]">{user.lastLogin}</td>
-                        <td className="p-4 text-right font-sans">
-                          {user.role !== 'super_admin' ? (
-                            <button
-                              onClick={() => toggleUserStatus(user.id)}
-                              className={`px-2.5 py-1 rounded text-xs font-semibold transition border cursor-pointer ${
-                                user.status === 'active'
-                                  ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
-                                  : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full text-left text-xs border-collapse min-w-[620px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                      <th className="p-4">Staff Member</th>
+                      <th className="p-4">Contact Phone</th>
+                      <th className="p-4">System Role</th>
+                      <th className="p-4">Account Status</th>
+                      <th className="p-4">Last Activity</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
+                    {users
+                      .filter((u) => u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(userSearchQuery.toLowerCase()))
+                      .map((user) => (
+                        <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="p-4">
+                            <div className="font-bold text-slate-900 text-sm font-sans">{user.name}</div>
+                            <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
+                              <Mail className="w-3 h-3 text-slate-400" />
+                              <span>{user.email}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 font-mono text-slate-700">{user.phone}</td>
+                          <td className="p-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${
+                                user.role === 'super_admin'
+                                  ? 'bg-purple-50 border-purple-200 text-purple-700'
+                                  : user.role === 'fleet_manager'
+                                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                                  : 'bg-amber-50 border-amber-200 text-amber-700'
                               }`}
                             >
-                              {user.status === 'active' ? 'Suspend' : 'Activate'}
-                            </button>
-                          ) : (
-                            <span className="text-[10px] text-slate-400 font-mono">Owner (Protected)</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                              {user.role === 'super_admin' ? 'Super Admin' : user.role === 'fleet_manager' ? 'Fleet Manager' : 'Supervisor'}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                user.status === 'active'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              }`}
+                            >
+                              {user.status}
+                            </span>
+                          </td>
+                          <td className="p-4 text-slate-500 font-mono text-[11px]">{user.lastLogin}</td>
+                          <td className="p-4 text-right font-sans">
+                            {user.role !== 'super_admin' ? (
+                              <button
+                                onClick={() => toggleUserStatus(user.id)}
+                                className={`px-2.5 py-1 rounded text-xs font-semibold transition border cursor-pointer ${
+                                  user.status === 'active'
+                                    ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
+                                    : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                                }`}
+                              >
+                                {user.status === 'active' ? 'Suspend' : 'Activate'}
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-mono">Owner (Protected)</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
         {/* TAB 4: Driver DPDP Consent Compliance Registry */}
         {activeTab === 'consents' && (
-          <div className="max-w-5xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                  <FileCheck2 className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <FileCheck2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   <span>Driver Location Consent Compliance Register</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
                   Enforces India Digital Personal Data Protection (DPDP) Act 2023 & §6 of Spec. Drivers without valid consent cannot be dispatched on trips.
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-bold font-mono">
                   DPDP Policy: v1.0 Active
                 </span>
@@ -705,7 +707,7 @@ export const SuperAdminView: React.FC = () => {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
                 <div className="text-[11px] font-bold uppercase text-slate-500">Total Enrolled Drivers</div>
                 <div className="text-2xl font-black text-slate-900 mt-1">{consents.length}</div>
@@ -726,76 +728,78 @@ export const SuperAdminView: React.FC = () => {
 
             {/* Consents Table */}
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-                    <th className="p-4">Driver Name & Phone</th>
-                    <th className="p-4">Licence Number</th>
-                    <th className="p-4">Consent Status</th>
-                    <th className="p-4">Consent Version</th>
-                    <th className="p-4">Timestamp & Device</th>
-                    <th className="p-4 text-right">Audit Proof</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
-                  {consents.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-4">
-                        <div className="font-bold text-slate-900 font-sans">{c.name}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">{c.phone}</div>
-                      </td>
-                      <td className="p-4 font-mono text-slate-700">{c.license}</td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${
-                            c.status === 'CONSENTED'
-                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                              : 'bg-amber-50 border-amber-200 text-amber-700'
-                          }`}
-                        >
-                          {c.status}
-                        </span>
-                      </td>
-                      <td className="p-4 font-mono text-[11px] text-slate-600">{c.version}</td>
-                      <td className="p-4">
-                        <div className="text-slate-800 font-mono text-[11px]">{c.consentedAt}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{c.device}</div>
-                      </td>
-                      <td className="p-4 text-right font-sans">
-                        {c.status === 'CONSENTED' ? (
-                          <button
-                            onClick={() => setSelectedConsentCert(c)}
-                            className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 ml-auto shadow-2xs cursor-pointer"
-                          >
-                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>View Proof</span>
-                          </button>
-                        ) : (
-                          <span className="text-amber-600 text-[11px] font-semibold">Requires Phone Login</span>
-                        )}
-                      </td>
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full text-left text-xs border-collapse min-w-[680px]">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                      <th className="p-4">Driver Name & Phone</th>
+                      <th className="p-4">Licence Number</th>
+                      <th className="p-4">Consent Status</th>
+                      <th className="p-4">Consent Version</th>
+                      <th className="p-4">Timestamp & Device</th>
+                      <th className="p-4 text-right">Audit Proof</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
+                    {consents.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4">
+                          <div className="font-bold text-slate-900 font-sans">{c.name}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">{c.phone}</div>
+                        </td>
+                        <td className="p-4 font-mono text-slate-700">{c.license}</td>
+                        <td className="p-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${
+                              c.status === 'CONSENTED'
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                : 'bg-amber-50 border-amber-200 text-amber-700'
+                            }`}
+                          >
+                            {c.status}
+                          </span>
+                        </td>
+                        <td className="p-4 font-mono text-[11px] text-slate-600">{c.version}</td>
+                        <td className="p-4">
+                          <div className="text-slate-800 font-mono text-[11px]">{c.consentedAt}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{c.device}</div>
+                        </td>
+                        <td className="p-4 text-right font-sans">
+                          {c.status === 'CONSENTED' ? (
+                            <button
+                              onClick={() => setSelectedConsentCert(c)}
+                              className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 ml-auto shadow-2xs cursor-pointer"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>View Proof</span>
+                            </button>
+                          ) : (
+                            <span className="text-amber-600 text-[11px] font-semibold">Requires Phone Login</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
         {/* TAB 5: Append-Only Audit Trail */}
         {activeTab === 'audit' && (
-          <div className="max-w-5xl mx-auto p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div className="max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                  <History className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                  <History className="w-5 h-5 text-indigo-600 shrink-0" />
                   <span>Append-Only Forensic Transaction Audit Trail</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
                   Enforces §12.2 of Spec. Tracks every change to settings, user roles, driver enrollments, and trip lifecycle events.
                 </p>
               </div>
-              <span className="text-[10px] font-mono bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1 rounded-lg font-bold">
+              <span className="text-[10px] font-mono bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1 rounded-lg font-bold self-start sm:self-auto shrink-0">
                 NO UPDATE/DELETE GRANT
               </span>
             </div>
@@ -823,9 +827,9 @@ export const SuperAdminView: React.FC = () => {
                   a.details.toLowerCase().includes(auditSearch.toLowerCase())
                 )
                 .map((a) => (
-                  <div key={a.id} className="p-4 hover:bg-slate-50/80 transition-colors flex items-start justify-between gap-4">
+                  <div key={a.id} className="p-3.5 sm:p-4 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-indigo-600 text-xs">{a.action}</span>
                         <span className="text-slate-400">•</span>
                         <span className="text-slate-900 font-semibold font-sans">{a.actor}</span>
@@ -835,7 +839,7 @@ export const SuperAdminView: React.FC = () => {
                         Target: <span className="text-slate-600 font-semibold">{a.entity}</span> • IP: {a.ip}
                       </div>
                     </div>
-                    <div className="text-[11px] text-slate-400 shrink-0 text-right">
+                    <div className="text-[11px] text-slate-400 shrink-0 sm:text-right font-mono">
                       {a.timestamp}
                     </div>
                   </div>
@@ -870,8 +874,8 @@ export const SuperAdminView: React.FC = () => {
 
       {/* Modal 1: Create New Staff User */}
       {showAddUserModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl p-6">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
                 <UserPlus className="w-4 h-4 text-indigo-600" />
@@ -967,8 +971,8 @@ export const SuperAdminView: React.FC = () => {
 
       {/* Modal 2: View DPDP Driver Consent Certificate */}
       {selectedConsentCert && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl p-6">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
                 <FileCheck2 className="w-4 h-4 text-emerald-600" />
@@ -1020,7 +1024,7 @@ export const SuperAdminView: React.FC = () => {
             <div className="flex justify-end pt-4">
               <button
                 onClick={() => setSelectedConsentCert(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition"
+                className="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition"
               >
                 Close Audit Record
               </button>
