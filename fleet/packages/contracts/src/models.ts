@@ -52,6 +52,73 @@ export const InstallationSchema = z.object({
 });
 export type Installation = z.infer<typeof InstallationSchema>;
 
+export const VehicleDocumentComplianceSchema = z.object({
+  rc: z.object({
+    doc_number: z.string(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  road_tax: z.object({
+    receipt_number: z.string(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  puc: z.object({
+    cert_number: z.string(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  insurance: z.object({
+    policy_number: z.string(),
+    provider: z.string().optional(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  permit: z.object({
+    permit_number: z.string(),
+    permit_type: z.string().optional(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  fitness: z.object({
+    cert_number: z.string(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+});
+export type VehicleDocumentCompliance = z.infer<typeof VehicleDocumentComplianceSchema>;
+
+export const DriverDocumentComplianceSchema = z.object({
+  aadhaar: z.object({
+    doc_number: z.string(),
+    status: z.enum(['verified', 'pending']).default('verified'),
+  }).optional(),
+  police_verification: z.object({
+    cert_number: z.string(),
+    police_station: z.string().optional(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  medical_fitness: z.object({
+    cert_number: z.string(),
+    doctor_name: z.string().optional(),
+    doctor_reg: z.string().optional(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  driving_licence: z.object({
+    license_number: z.string(),
+    class: z.string().optional(),
+    valid_until: z.string().optional(),
+    status: z.enum(['verified', 'pending', 'expired']).default('verified'),
+  }).optional(),
+  contact_number: z.object({
+    phone: z.string(),
+    is_verified: z.boolean().default(true),
+  }).optional(),
+});
+export type DriverDocumentCompliance = z.infer<typeof DriverDocumentComplianceSchema>;
+
 export const BusSchema = z.object({
   id: z.string().uuid(),
   org_id: z.string().uuid(),
@@ -61,6 +128,7 @@ export const BusSchema = z.object({
   capacity: z.number().int().nullable().optional(),
   default_route_id: z.string().uuid().nullable().optional(),
   tracking_source: TrackingSourceSchema.default('phone'),
+  documents: VehicleDocumentComplianceSchema.optional(),
   is_active: z.boolean().default(true),
   created_at: z.string().datetime({ offset: true }),
   updated_at: z.string().datetime({ offset: true }),
@@ -75,6 +143,7 @@ export const DriverSchema = z.object({
   licence_expiry: z.string().datetime({ offset: true }).nullable().optional(),
   licence_number_encrypted: z.string().optional(),
   address_encrypted: z.string().optional(),
+  documents: DriverDocumentComplianceSchema.optional(),
   duty_status: z.enum(['on_duty', 'off_duty', 'on_leave']).default('on_duty'),
   created_at: z.string().datetime({ offset: true }),
 });
