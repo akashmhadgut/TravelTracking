@@ -1,8 +1,7 @@
-﻿Fleet Management & Live Bus Tracking
+Fleet Management & Live Bus Tracking
 Engineering Specification v1.0 (Android and iOS)
 Developer blueprint for the MVP. Companion to SRS v1.1. Hosting and cost are intentionally excluded.
 This specification tells the team what to build and how, so that location data flows from Android and iOS phones to the dashboard map in under 3 seconds, and every MVP requirement in SRS v1.1 maps to a component, an API and a test.
-
 1. Targets, Scope and Traceability
 1.1 Engineering targets
 Target
@@ -72,7 +71,6 @@ Errors use RFC 9457 application/problem+json with a stable code field.
 Every state-changing endpoint writes an audit entry in the same transaction.
 Migrations are forward-only SQL files. Secrets never appear in code, logs or client bundles.
 Logs are structured (pino) and carry requestId, orgId, and busId or tripId where relevant.
-
 2. Architecture
 2.1 Runtime view of the live data path
 The driver starts a trip in the app. The app creates a local trip record, begins background location updates and writes every point to a local SQLite queue.
@@ -121,13 +119,11 @@ Backend modules: auth, organizations, fleet, routes, trips, tracking, alerts, re
 A module owns its tables. Other modules call its exported service functions, never its tables.
 Cross-module reads use the owning module's service; a lint rule (import restrictions) enforces this.
 tracking exposes one interface, LocationSource, which the phone ingest endpoint implements now; a dedicated GPS adapter will implement it in Release 2 and produce the same normalized record.
-
 3. Repository and Environment
 fleet/  apps/    api/            Fastify server and worker entry points    web/            React dashboard    driver/         React Native app (Android and iOS)    simulator/      GPS replay and load tool  packages/    contracts/      Zod schemas, enums, shared types, error codes    eslint-config/  Shared lint rules and import boundaries    tsconfig/       Shared compiler settings  db/    migrations/     Versioned SQL    seeds/          Demo data: 100 buses, drivers, routes, a week of trips  docs/             OpenAPI output, ADRs, runbooks
 Local development: Docker Compose with PostGIS, MinIO (S3 stand-in) and Mailpit. One command (pnpm dev) starts API, worker and web; pnpm seed loads the demo company.
 Configuration: a Zod schema validates environment variables at boot and the process refuses to start if one is missing. A .env.example documents every variable.
 Scripts everyone uses: lint, typecheck, test, test:integration, migrate, seed, openapi, simulate.
-
 4. Data Model
 Core tables in SQL. Other tables follow the same conventions and are listed after the DDL.
 CREATE EXTENSION IF NOT EXISTS postgis;CREATE EXTENSION IF NOT EXISTS citext;CREATE TYPE user_role    AS ENUM ('super_admin','fleet_manager','supervisor','driver');CREATE TYPE trip_status  AS ENUM ('scheduled','in_progress','completed','cancelled');CREATE TYPE bus_status   AS ENUM ('moving','stopped','stale','offline','not_on_trip');CREATE TYPE alert_status AS ENUM ('open','acknowledged','resolved');CREATE TYPE severity     AS ENUM ('info','warning','critical');CREATE TABLE buses (  id uuid PRIMARY KEY, org_id uuid NOT NULL REFERENCES organizations(id),  reg_no text NOT NULL, make text, model text, capacity int,  default_route_id uuid, tracking_source text NOT NULL DEFAULT 'phone'    CHECK (tracking_source IN ('phone','device')),  is_active boolean NOT NULL DEFAULT true,  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),  UNIQUE (org_id, reg_no));CREATE TABLE installations (            -- one row per phone install of the driver app  id uuid PRIMARY KEY, org_id uuid NOT NULL, user_id uuid NOT NULL,  platform text NOT NULL CHECK (platform IN ('android','ios')),  model text, os_version text, app_version text,  revoked_at timestamptz, last_seen_at timestamptz);CREATE TABLE trips (  id uuid PRIMARY KEY, org_id uuid NOT NULL, route_id uuid NOT NULL,  route_version_id uuid NOT NULL, bus_id uuid NOT NULL, driver_id uuid NOT NULL,  status trip_status NOT NULL DEFAULT 'scheduled',  planned_start timestamptz NOT NULL, planned_end timestamptz NOT NULL,  actual_start timestamptz, actual_end timestamptz,  distance_m int, delayed boolean NOT NULL DEFAULT false,  delay_reason text, cancel_reason text, closed_by text,   -- driver | admin | system  created_by uuid, created_at timestamptz NOT NULL DEFAULT now());CREATE UNIQUE INDEX one_active_trip_per_bus ON trips (bus_id) WHERE status = 'in_progress';CREATE UNIQUE INDEX one_active_trip_per_driver ON trips (driver_id) WHERE status = 'in_progress';CREATE SEQUENCE live_rev_seq;CREATE TABLE latest_bus_locations (     -- exactly one row per bus  bus_id uuid PRIMARY KEY, org_id uuid NOT NULL, trip_id uuid,  lat double precision NOT NULL, lng double precision NOT NULL,  speed_kmh real, heading_deg real, accuracy_m real,  recorded_at timestamptz NOT NULL, received_at timestamptz NOT NULL,  source text NOT NULL, battery_pct smallint,  status bus_status NOT NULL, status_since timestamptz NOT NULL,  slow_since timestamptz,               -- start of the current below-5-km/h run  rev bigint NOT NULL                   -- monotonic version used for resync);CREATE TABLE trip_locations (           -- append-only history, monthly partitions  bus_id uuid NOT NULL, org_id uuid NOT NULL, trip_id uuid,  client_point_id uuid NOT NULL,  recorded_at timestamptz NOT NULL, received_at timestamptz NOT NULL,  lat double precision NOT NULL, lng double precision NOT NULL,  speed_kmh real, heading_deg real, accuracy_m real,  source text NOT NULL, flags smallint NOT NULL DEFAULT 0,  PRIMARY KEY (bus_id, recorded_at, client_point_id)) PARTITION BY RANGE (recorded_at);CREATE INDEX ON trip_locations (trip_id, recorded_at);CREATE TABLE trip_locations_default PARTITION OF trip_locations DEFAULT;-- monthly: boundaries are UTC midnightsCREATE TABLE trip_locations_2026_11 PARTITION OF trip_locations  FOR VALUES FROM ('2026-11-01 00:00:00+00') TO ('2026-12-01 00:00:00+00');CREATE TABLE alerts (  id uuid PRIMARY KEY, org_id uuid NOT NULL, type text NOT NULL,  severity severity NOT NULL, status alert_status NOT NULL DEFAULT 'open',  bus_id uuid, driver_id uuid, trip_id uuid,  dedupe_key text NOT NULL, message text NOT NULL, data jsonb,  opened_at timestamptz NOT NULL DEFAULT now(),  acknowledged_by uuid, acknowledged_at timestamptz,  resolved_by uuid, resolved_at timestamptz, auto_resolved boolean NOT NULL DEFAULT false);CREATE UNIQUE INDEX one_open_alert_per_key ON alerts (org_id, dedupe_key) WHERE status <> 'resolved';
@@ -163,12 +159,10 @@ audit_logs
 actor, action, entity, old and new values (jsonb), IP; append-only (no UPDATE or DELETE grant)
 idempotency_keys
 key, user, request hash, response, expires, for offline outbox replays
-
 5. Live Data Ingestion
 5.1 Request and response
 POST /v1/ingest/locations, bearer token of an installation session. Limits: up to 200 points and 256 KB per request; 60 requests a minute per installation.
 {  "sent_at": "2026-11-02T03:15:12.000Z",  "trip_id": "0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a10",  "points": [    { "id": "0192f0a1-8a01-7d22-8b31-1f6d2a9c0b01",      "recorded_at": "2026-11-02T03:15:10.000Z",      "lat": 18.5204, "lng": 73.8567,      "accuracy_m": 8, "speed_kmh": 32.4, "heading_deg": 90 }  ],  "health": { "battery_pct": 71, "charging": true, "network": "4g",              "permission": "always", "queue_depth": 0, "app_version": "1.0.3" }}
-
 {  "server_time": "2026-11-02T03:15:12.240Z",  "results": [ { "id": "0192f0a1-8a01-7d22-8b31-1f6d2a9c0b01", "outcome": "accepted" } ],  "config": { "interval_moving_s": 10, "interval_still_s": 30 },  "min_app_version": "1.0.0"}
 A processed batch returns 200 even when some points are rejected; the per-point outcome is accepted, duplicate or rejected (with reason). Batch-level failures use 400 (schema), 401 (no or expired token), 403 (installation revoked or trip not assigned to this driver), 413, 429 (with Retry-After) and 5xx. The app deletes only points that came back accepted, duplicate or rejected, and retries everything else.
 Clock handling. The server never rewrites recorded_at. The app obtains server_time from every response (and from GET /v1/time at trip start), keeps an offset, and stamps points with corrected UTC. Rewriting on the server would make retries produce different keys.
@@ -218,7 +212,6 @@ INSERT INTO trip_locations  (bus_id, org_id, trip_id, client_point_id, recorded_
 The conditional upsert is the guarantee that an older point can never move a bus backwards:
 INSERT INTO latest_bus_locations AS l  (bus_id, org_id, trip_id, lat, lng, speed_kmh, heading_deg, accuracy_m,   recorded_at, received_at, source, battery_pct, status, status_since, slow_since, rev)VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now(), $10,$11,$12, now(), $13, nextval('live_rev_seq'))ON CONFLICT (bus_id) DO UPDATE SET  trip_id = EXCLUDED.trip_id, lat = EXCLUDED.lat, lng = EXCLUDED.lng,  speed_kmh = EXCLUDED.speed_kmh, heading_deg = EXCLUDED.heading_deg,  accuracy_m = EXCLUDED.accuracy_m, recorded_at = EXCLUDED.recorded_at,  received_at = EXCLUDED.received_at, source = EXCLUDED.source, battery_pct = EXCLUDED.battery_pct,  status = EXCLUDED.status,  status_since = CASE WHEN l.status = EXCLUDED.status THEN l.status_since ELSE now() END,  slow_since = EXCLUDED.slow_since, rev = nextval('live_rev_seq')WHERE EXCLUDED.recorded_at > l.recorded_atRETURNING *;
 RETURNING is empty when the point was not newer, so no event is emitted and no stale data reaches the map.
-
 6. Status Engine, Alerts and Trip Rules
 6.1 Status
 Status is computed from the age of the latest good point and the trip state, never from the last speed alone.
@@ -276,7 +269,6 @@ Distance: computed once at trip end from good points (accuracy 100 m or better),
 SELECT COALESCE(SUM(d), 0)::int FROM (  SELECT ST_Distance(           ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography,           ST_SetSRID(ST_MakePoint(LAG(lng) OVER w, LAG(lat) OVER w), 4326)::geography) AS d  FROM trip_locations  WHERE trip_id = $1 AND (flags & 1) = 0           -- bit 1 = low_accuracy  WINDOW w AS (ORDER BY recorded_at)) s WHERE d >= 5;
 Recurrence: a daily job turns trip_templates into concrete trips for the next 14 days; regenerating is idempotent per template and date.
 Route versions: a trip stores its route_version_id, so editing a route never changes history.
-
 7. API Specification
 7.1 Conventions
 Base path /v1; JSON; Authorization: Bearer <access token>; OpenAPI generated from the Zod route schemas and published in CI.
@@ -388,7 +380,6 @@ Driver consent records
 GET /healthz, /readyz
 Public
 Liveness; readiness checks the database
-
 8. Real-Time Delivery to the Dashboard
 8.1 Connection and rooms
 The client connects with auth: { token }. The server verifies the JWT, rejects driver tokens, and joins the socket to exactly one room, org:{orgId}. Clients can never choose rooms.
@@ -421,7 +412,6 @@ Apply the snapshot, then apply buffered and later events. For each bus, ignore a
 On disconnect, show a banner after 5 s and reconnect with backoff (1 to 10 s with jitter). Every reconnect repeats step 1; the client never assumes it missed nothing.
 If no event and no heartbeat arrives for 60 s, treat the connection as dead and reconnect.
 The "x seconds ago" text is computed on the client from recorded_at, so it keeps counting up even when no events arrive. The status itself always comes from the server.
-
 9. Driver App (Android and iOS)
 9.1 Layers
 Layer
@@ -550,7 +540,6 @@ Semantic versions; build numbers incremented by EAS. Credentials and store accou
 Over-the-air updates ship JavaScript only. Any change to native configuration, permissions or the tracking task needs a new store build.
 Sentry with source maps for crashes; releases tagged with the Git commit.
 A development build is required for every GPS test; Expo Go is never used to validate tracking.
-
 10. Admin Dashboard
 10.1 Structure
 Routes: /login, / (dashboard), /live, /buses, /buses/:id, /drivers, /drivers/:id, /routes, /routes/:id/edit, /trips, /trips/:id, /trips/:id/replay, /alerts, /reports, /users, /audit, /settings.
@@ -570,7 +559,6 @@ The tile style URL and attribution come from configuration so the provider can c
 10.3 Route editor and replay
 Editor: click the map to add stops, drag to reorder, set planned offsets. Validation: at least 2 stops, offsets strictly increasing, no duplicate coordinates. Saving creates a new route version; Build road geometry calls the backend, which uses a RoutingProvider interface and stores the resulting line.
 Replay: GET /trips/:id/replay?step=5 returns points bucketed by step seconds (capped at 20,000), plus stop events and alerts for the timeline. The player supports 1x, 4x and 16x speed, a draggable timeline and a marker following the path.
-
 11. Reports and Exports
 Report
 Definition
@@ -596,7 +584,6 @@ Date, bus
 On-screen reports are paginated and limited to 92 days; summaries to 366 days.
 Exports run as pg-boss jobs that stream rows with a database cursor into CSV (or XLSX up to 200,000 rows), store the file through FileStore, and return a signed link that expires in 24 hours. Larger XLSX requests fall back to CSV with a notice.
 Every export is authorized, bounded, audited, and listed in the user's export history. Totals must reconcile with raw data: distance and trip counts for a sampled day match within 2%.
-
 12. Security Implementation
 12.1 Tenant isolation in three layers
 Code: every repository function takes orgId; an import-restriction lint rule blocks direct table access from other modules.
@@ -628,7 +615,6 @@ Supply chain
 Lockfile with frozen installs, dependency audit, automated update PRs, secret scanning, container image scan
 Privacy
 Consent gate before any tracking; trip-only collection; retention job from section 4; access to driver history logged; drivers can request their own history
-
 13. Testing and Proof That Live Data Works
 13.1 Live-data acceptance scenarios
 These are the tests that prove the central requirement. Each runs on both Android and iOS unless stated, with the results recorded.
@@ -724,7 +710,6 @@ Stale shown within 75 s and Offline within 315 s of tracking stopping.
 Every recovery case above behaves as documented.
 A device model that fails is removed from the approved device list, or fixed using the fallback in section 2.3 and tested again.
 Deliverable: a Platform Behaviour Report for Android and another for iOS, each listing the models and OS versions tested, the measured numbers, and the behaviours that cannot be fixed (for example iOS force-quit, no auto-start after reboot, and the manufacturer settings Android needs). The driver guide and the operations guide are written from these reports, and the pilot on a platform starts only after that platform's report is signed off.
-
 14. CI/CD and Quality Gates
 Stage
 Runs
@@ -744,7 +729,6 @@ On tag
 Branch protection: required checks, at least one review, no direct pushes to main.
 Migrations: applied before the new version starts; tested from an empty database and from the previous release's schema; forward-only; breaking changes use expand then contract; large indexes use CREATE INDEX CONCURRENTLY; lock and statement timeouts are set.
 Conventional commits and generated release notes; the API and app report their version so every bug report names a build.
-
 15. Build Plan: Epics and Order
 Approach: walking skeleton first. By the end of week 2, a simulated bus must move on a map through the real pipeline, and an Android and an iPhone development build must send real points. Everything else is added around a path that already works.
 15.1 Epics
@@ -847,7 +831,6 @@ Submit a build early; keep purpose strings and the demo video accurate
 Partition or retention job fails silently
 Rows in the default partition
 Alert on non-empty default partition and on job failure
-
 16. Requirement Coverage and Final Checklist
 16.1 Coverage
 SRS requirement group

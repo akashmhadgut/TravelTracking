@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { randomUUID } from 'node:crypto';
 
 const API_URL = process.env.API_URL || 'http://localhost:3000';
 const mode = process.argv.find((a) => a.startsWith('--mode='))?.split('=')[1] || 'smoke';
@@ -77,7 +78,7 @@ async function streamRoadSnappedFix() {
     trip_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a10',
     points: [
       {
-        id: `0192f0a1-8a01-7d22-8b31-${Math.random().toString(36).substring(2, 14)}`,
+        id: randomUUID(),
         recorded_at: now.toISOString(),
         lat: Number(currentLat.toFixed(6)),
         lng: Number(currentLng.toFixed(6)),

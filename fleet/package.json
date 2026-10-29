@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "migrate": "npx tsx db/migrate.ts",
     "dev:api": "npm --workspace=apps/api run dev",
     "dev:worker": "npm --workspace=apps/api run worker",
     "dev:web": "npm --workspace=apps/web run dev",

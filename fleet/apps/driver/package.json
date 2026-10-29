@@ -4,9 +4,12 @@
   "main": "App.tsx",
   "scripts": {
     "start": "expo start",
+    "dev": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:android:apk": "eas build -p android --profile preview",
+    "build:android:prod": "eas build -p android --profile production"
   },
   "dependencies": {
     "@fleet/contracts": "*",

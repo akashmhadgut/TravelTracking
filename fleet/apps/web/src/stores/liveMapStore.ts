@@ -52,7 +52,7 @@ export const useLiveMapStore = create<LiveMapState>((set) => ({
         const existing = nextMap.get(item.bus_id);
 
         if (!existing || itemRev > BigInt(existing.rev)) {
-          nextMap.set(item.bus_id, item);
+          nextMap.set(item.bus_id, { ...existing, ...item });
           updated = true;
         }
       }

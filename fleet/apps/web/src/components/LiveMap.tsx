@@ -3,11 +3,6 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useLiveMapStore } from '../stores/liveMapStore';
 
-const CAR_REG_MAPPING: Record<string, string> = {
-  '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a01': 'MH-12-DT-0001 (Nexon EV)',
-  '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a02': 'MH-12-DT-0002 (MG ZS EV)',
-};
-
 export const LiveMap: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<maplibregl.Map | null>(null);
@@ -24,8 +19,8 @@ export const LiveMap: React.FC = () => {
     const map = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/positron',
-      center: [73.8567, 18.5204], // Pune Center
-      zoom: 13,
+      center: [73.8567, 18.5204], // Pune Metro Area
+      zoom: 12,
     });
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
@@ -40,7 +35,6 @@ export const LiveMap: React.FC = () => {
 
     return () => {
       resizeObserver.disconnect();
-      // Clean up markers
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current.clear();
       map.remove();
@@ -59,26 +53,28 @@ export const LiveMap: React.FC = () => {
       currentCarIds.add(car.bus_id);
 
       const isSelected = car.bus_id === selectedBusId;
+      const isMoving = car.status === 'moving';
       const statusColor =
         car.status === 'moving'
-          ? '#22c55e' // emerald
+          ? '#10b981' // emerald
           : car.status === 'stopped'
-          ? '#eab308' // amber
+          ? '#0ea5e9' // sky blue
           : car.status === 'stale'
-          ? '#f97316' // orange
-          : '#ef4444'; // red
+          ? '#f59e0b' // amber
+          : '#64748b'; // slate / offline
 
-      const regPlate = CAR_REG_MAPPING[car.bus_id] || car.bus_id.slice(0, 8);
+      const regPlate = (car as any).reg_no || ('MH-12-DT-' + car.bus_id.slice(-4).toUpperCase());
       const speedText = `${Math.round(car.speed_kmh || 0)} km/h`;
+      const heading = car.heading_deg || 0;
 
       let marker = markersRef.current.get(car.bus_id);
 
       if (!marker) {
-        // Create new interactive DOM Marker for the car
+        // Create interactive DOM Marker for the car
         const el = document.createElement('div');
-        el.className = 'car-live-marker cursor-pointer transition-transform duration-300';
-        el.style.width = '44px';
-        el.style.height = '44px';
+        el.className = 'car-live-marker cursor-pointer group transition-transform duration-200';
+        el.style.width = '32px';
+        el.style.height = '32px';
 
         el.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -98,108 +94,112 @@ export const LiveMap: React.FC = () => {
         marker.setLngLat([car.lng, car.lat]);
       }
 
-      // Update Marker inner HTML with Car SVG and live stats
+      // Update Marker inner HTML with sleek directional Car Silhouette
       const el = marker.getElement();
-      el.style.zIndex = isSelected ? '50' : car.status === 'moving' ? '40' : '30';
+      el.style.zIndex = isSelected ? '100' : isMoving ? '50' : '30';
 
       el.innerHTML = `
         <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          <!-- Moving Pulse Glow -->
+          <!-- Moving Pulse Halo -->
           ${
-            car.status === 'moving'
-              ? `<div style="position: absolute; inset: -4px; border-radius: 9999px; background-color: ${statusColor}; opacity: 0.35; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>`
+            isMoving
+              ? `<div style="position: absolute; inset: -4px; border-radius: 9999px; background-color: ${statusColor}; opacity: 0.3; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>`
               : ''
           }
-          
-          <!-- Directional Bearing Arrow for moving cars -->
-          ${
-            car.status === 'moving' && car.heading_deg !== undefined
-              ? `<div style="
-                  position: absolute;
-                  top: -5px;
-                  left: 50%;
-                  width: 10px;
-                  height: 10px;
-                  transform-origin: 5px 25px;
-                  transform: translateX(-50%) rotate(${car.heading_deg}deg);
-                  transition: transform 0.4s ease-out;
-                  pointer-events: none;
-                  z-index: 20;
-                ">
-                  <svg viewBox="0 0 12 12" style="width: 10px; height: 10px; fill: ${statusColor}; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));">
-                    <polygon points="6,0 12,12 6,9 0,12" />
-                  </svg>
-                </div>`
-              : ''
-          }
-          
-          <!-- Car Circular Icon Shell (Always Straight & Upright) -->
+
+          <!-- Car Directional Puck -->
           <div style="
-            position: relative;
-            width: 40px;
-            height: 40px;
+            width: ${isSelected ? '32px' : '26px'};
+            height: ${isSelected ? '32px' : '26px'};
             border-radius: 9999px;
-            background: #ffffff;
-            border: 2.5px solid ${isSelected ? '#4f46e5' : statusColor};
-            box-shadow: 0 4px 14px ${isSelected ? 'rgba(79, 70, 229, 0.4)' : 'rgba(15, 23, 42, 0.15)'};
+            background-color: ${isSelected ? '#4f46e5' : '#0f172a'};
+            border: 2px solid ${isSelected ? '#ffffff' : statusColor};
             display: flex;
             align-items: center;
             justify-content: center;
-            transform: scale(${isSelected ? '1.15' : '1'});
-            transition: transform 0.2s;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.45);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: rotate(${heading}deg);
           ">
-            <!-- Straight Upright Car SVG (Never tilted or upside down) -->
-            <svg
-              style="width: 22px; height: 22px; fill: ${statusColor};"
-              viewBox="0 0 24 24"
-            >
-              <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+            <!-- Modern Top-Down / Heading Car Silhouette -->
+            <svg width="${isSelected ? '16' : '13'}" height="${isSelected ? '16' : '13'}" viewBox="0 0 24 24" fill="${isSelected ? '#ffffff' : statusColor}">
+              <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/>
+              <circle cx="7.5" cy="14.5" r="1.5"/>
+              <circle cx="16.5" cy="14.5" r="1.5"/>
             </svg>
           </div>
 
-          <!-- Vehicle Registration Badge & Live Speed Pill -->
-          <div style="
-            margin-top: 4px;
-            white-space: nowrap;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid ${isSelected ? '#4f46e5' : '#cbd5e1'};
+          <!-- Uncluttered Floating Label Badge (Shows on Selected, Moving, or Hover) -->
+          <div class="${isSelected ? 'opacity-100 scale-100' : 'opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100'} transition-all duration-150" style="
+            position: absolute;
+            top: 32px;
+            background-color: rgba(15, 23, 42, 0.95);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: ui-monospace, monospace;
             padding: 2px 7px;
-            border-radius: 9999px;
+            border-radius: 6px;
+            white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            pointer-events: none;
             display: flex;
             align-items: center;
             gap: 5px;
-            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1);
-            pointer-events: none;
           ">
-            <span style="width: 6px; height: 6px; border-radius: 9999px; background: ${statusColor};"></span>
-            <span style="font-size: 10px; font-weight: 800; font-family: monospace; color: #0f172a;">${regPlate}</span>
-            <span style="font-size: 9px; font-weight: 700; font-family: monospace; color: ${statusColor};">${speedText}</span>
+            <span>${regPlate}</span>
+            ${isMoving ? `<span style="color: #34d399; font-size: 9px;">• ${speedText}</span>` : ''}
           </div>
         </div>
       `;
     });
 
-    // Remove any markers that no longer exist
-    markersRef.current.forEach((marker, id) => {
-      if (!currentCarIds.has(id)) {
+    // Remove markers for cars that are no longer in the snapshot
+    markersRef.current.forEach((marker, carId) => {
+      if (!currentCarIds.has(carId)) {
         marker.remove();
-        markersRef.current.delete(id);
+        markersRef.current.delete(carId);
       }
     });
   }, [busesById, selectedBusId, setSelectedBusId]);
 
-  // Center on selected car
+  // Center on selected car when clicked in sidebar
   useEffect(() => {
     if (!selectedBusId || !mapInstance.current) return;
     const car = busesById.get(selectedBusId);
     if (car) {
-      mapInstance.current.easeTo({
+      mapInstance.current.flyTo({
         center: [car.lng, car.lat],
         zoom: 15,
-        duration: 800,
+        speed: 1.2,
       });
     }
   }, [selectedBusId, busesById]);
 
-  return <div ref={mapContainer} className="w-full h-full relative" />;
+  return (
+    <div className="relative w-full h-full">
+      <div ref={mapContainer} className="w-full h-full" />
+
+      {/* Map Legend */}
+      <div className="absolute top-3 left-3 bg-slate-900/90 backdrop-blur-md border border-slate-800 text-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-xl z-20 flex items-center gap-3.5">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Moving Cars</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+          <span>Idle / Stopped</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+          <span>Stale Signal (&gt;60s)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
+          <span>Offline (&gt;5m)</span>
+        </div>
+      </div>
+    </div>
+  );
 };

@@ -21,65 +21,25 @@ interface AuthState {
   isLoading: boolean;
   error: ProblemDetails | null;
   clearError: () => void;
-  login: (email: string, pass: string) => Promise<void>;
+  login: (identifier: string, pass: string) => Promise<void>;
   driverLogin: (phone: string, pin: string) => Promise<void>;
   logout: () => void;
-  switchRoleDirect: (role: UserRole) => void;
 }
 
-const DEFAULT_USERS: Record<UserRole, AuthUser> = {
-  super_admin: {
-    id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1001',
-    org_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1000',
-    org_name: 'City Express Transit Pvt Ltd',
-    name: 'Vasant Kulkarni',
-    email: 'admin@fleetcommand.io',
-    role: 'super_admin',
-    permissions: ['*'],
-  },
-  fleet_manager: {
-    id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1002',
-    org_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1000',
-    org_name: 'City Express Transit Pvt Ltd',
-    name: 'Priya Sharma',
-    email: 'manager@fleetcommand.io',
-    role: 'fleet_manager',
-    permissions: ['buses.*', 'drivers.*', 'routes.*', 'trips.*', 'alerts.read', 'reports.*'],
-  },
-  supervisor: {
-    id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1003',
-    org_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1000',
-    org_name: 'City Express Transit Pvt Ltd',
-    name: 'Amit Deshmukh',
-    email: 'supervisor@fleetcommand.io',
-    role: 'supervisor',
-    permissions: ['live_map.read', 'trips.read', 'alerts.acknowledge'],
-  },
-  driver: {
-    id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4e0001',
-    org_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1000',
-    org_name: 'City Express Transit Pvt Ltd',
-    name: 'Ganesh Jadhav',
-    phone: '+919822001122',
-    role: 'driver',
-    permissions: ['trips.execute', 'location.broadcast'],
-  },
-};
-
 // Check local storage for initial state
-const storedUser = localStorage.getItem('fleet_user');
-const storedToken = localStorage.getItem('fleet_token');
+const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fleet_user') : null;
+const storedToken = typeof window !== 'undefined' ? localStorage.getItem('fleet_token') : null;
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: storedUser ? JSON.parse(storedUser) : DEFAULT_USERS.fleet_manager,
-  token: storedToken || 'ey-demo-jwt-token',
-  isAuthenticated: true, // Default authenticated to Fleet Manager for immediate review, but can logout to test login screen
+  user: storedUser ? JSON.parse(storedUser) : null,
+  token: storedToken || null,
+  isAuthenticated: Boolean(storedToken && storedUser),
   isLoading: false,
   error: null,
 
   clearError: () => set({ error: null }),
 
-  login: async (email: string, pass: string) => {
+  login: async (identifier: string, pass: string) => {
     set({ isLoading: true, error: null });
     try {
       const data = await apiFetch<{
@@ -87,7 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: AuthUser;
       }>('/v1/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password: pass }),
+        body: JSON.stringify({ identifier, email: identifier, password: pass }),
       });
 
       localStorage.setItem('fleet_token', data.access_token);
@@ -124,22 +84,32 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const data = await apiFetch<{
         access_token: string;
-        driver: AuthUser;
+        driver: {
+          id: string;
+          name: string;
+          phone: string;
+          role?: UserRole;
+        };
       }>('/v1/auth/driver/login', {
         method: 'POST',
-        body: JSON.stringify({
-          phone,
-          pin,
-          platform: 'android',
-          app_version: '1.0.0',
-        }),
+        body: JSON.stringify({ phone, pin }),
       });
 
+      const driverUser: AuthUser = {
+        id: data.driver.id,
+        org_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1000',
+        org_name: 'Deccan City Transit Corporation',
+        name: data.driver.name,
+        phone: data.driver.phone,
+        role: 'driver',
+        permissions: ['trips.active', 'ingest.locations'],
+      };
+
       localStorage.setItem('fleet_token', data.access_token);
-      localStorage.setItem('fleet_user', JSON.stringify(data.driver));
+      localStorage.setItem('fleet_user', JSON.stringify(driverUser));
 
       set({
-        user: data.driver,
+        user: driverUser,
         token: data.access_token,
         isAuthenticated: true,
         isLoading: false,
@@ -154,7 +124,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             type: 'urn:fleet:error:network',
             title: 'Connection Error',
             status: 0,
-            detail: 'Unable to reach driver authentication service.',
+            detail: 'Unable to reach authentication server.',
             code: 'network.offline',
           },
           isLoading: false,
@@ -173,17 +143,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: false,
       error: null,
     });
-  },
-
-  switchRoleDirect: (role: UserRole) => {
-    const newUser = DEFAULT_USERS[role];
-    localStorage.setItem('fleet_token', `ey-demo-jwt-${role}`);
-    localStorage.setItem('fleet_user', JSON.stringify(newUser));
-    set({
-      user: newUser,
-      token: `ey-demo-jwt-${role}`,
-      isAuthenticated: true,
-      error: null,
-    });
+    apiFetch('/v1/auth/logout', { method: 'POST' }).catch(() => {});
   },
 }));

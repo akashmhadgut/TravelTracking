@@ -220,6 +220,17 @@ export const LatestBusLocationSchema = z.object({
   status_since: z.string().datetime({ offset: true }),
   slow_since: z.string().datetime({ offset: true }).nullable().optional(),
   rev: z.string(), // BigInt serialized as string for JSON safety
+  reg_no: z.string().optional(),
+  make: z.string().optional(),
+  model: z.string().optional(),
+  driver_id: z.string().optional(),
+  driver_name: z.string().optional(),
+  driver_phone: z.string().optional(),
+  driver_license: z.string().optional(),
+  driver_status: z.string().optional(),
+  driver_rating: z.number().optional(),
+  cleanliness_status: z.string().optional(),
+  stopped_reason: z.string().optional(),
 });
 export type LatestBusLocation = z.infer<typeof LatestBusLocationSchema>;
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Car, User, MapPin, CheckCircle, Clock } from 'lucide-react';
+import { X, Car, User, MapPin, CheckCircle, Clock } from 'lucide-react';
 
 interface DispatchTripModalProps {
   onClose: () => void;
@@ -18,9 +18,9 @@ export const DispatchTripModal: React.FC<DispatchTripModalProps> = ({
   const [successNotice, setSuccessNotice] = useState(false);
 
   const availableBuses = [
-    { id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a01', reg: 'MH-12-DT-0001 (Tata Nexon EV Max)', depot: 'Kothrud Hub' },
-    { id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a02', reg: 'MH-12-DT-0002 (MG ZS EV)', depot: 'Shivajinagar' },
-    { id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a03', reg: 'MH-12-DT-0003 (Hyundai Ioniq 5)', depot: 'Baner' },
+    { id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a01', reg: 'MH-12-DT-0001 (Tata Nexon EV Max (5 Seater))', depot: 'Kothrud Hub' },
+    { id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a02', reg: 'MH-12-DT-0002 (MG ZS EV Exclusive (5 Seater))', depot: 'Shivajinagar Depot' },
+    { id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a03', reg: 'MH-12-DT-0003 (Hyundai Ioniq 5 Electric (5 Seater))', depot: 'Baner Depot' },
   ];
 
   const availableDrivers = [
@@ -38,19 +38,15 @@ export const DispatchTripModal: React.FC<DispatchTripModalProps> = ({
   const handleDispatch = async () => {
     setIsSubmitting(true);
 
-    const now = new Date();
-    const plannedStart = new Date(now.getTime() + 15 * 60000).toISOString();
-    const plannedEnd = new Date(now.getTime() + 85 * 60000).toISOString();
-
-    const payload = {
-      route_id: selectedRoute,
-      bus_id: selectedBus,
-      driver_id: selectedDriver,
-      planned_start: plannedStart,
-      planned_end: plannedEnd,
-    };
-
     try {
+      const payload = {
+        bus_id: selectedBus,
+        driver_id: selectedDriver,
+        route_id: selectedRoute,
+        planned_start: new Date().toISOString(),
+        planned_end: new Date(Date.now() + 3600000).toISOString(),
+      };
+
       const res = await fetch('/v1/trips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,142 +54,139 @@ export const DispatchTripModal: React.FC<DispatchTripModalProps> = ({
       });
 
       if (res.ok) {
-        const trip = await res.json();
+        const data = await res.json();
         setSuccessNotice(true);
         setTimeout(() => {
-          onTripDispatched(trip);
+          onTripDispatched(data.trip || payload);
           onClose();
-        }, 1500);
+        }, 1200);
       } else {
-        const trip = { id: `trp-${Date.now()}`, ...payload, status: 'dispatched' };
+        // Fallback simulate
         setSuccessNotice(true);
         setTimeout(() => {
-          onTripDispatched(trip);
+          onTripDispatched(payload);
           onClose();
-        }, 1500);
+        }, 1200);
       }
     } catch {
-      const trip = { id: `trp-${Date.now()}`, ...payload, status: 'dispatched' };
       setSuccessNotice(true);
       setTimeout(() => {
-        onTripDispatched(trip);
         onClose();
-      }, 1500);
+      }, 1200);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg max-h-[90dvh] overflow-y-auto shadow-2xl text-slate-800 text-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-600">
-              <Calendar className="w-5 h-5" />
+            <div className="p-2 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
+              <Car className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-slate-900">Dispatch Trip & Assign Driver</h2>
-              <p className="text-[11px] text-slate-500">Fleet Operations Desk (Spec §6.3 & §7.3)</p>
+              <h3 className="font-bold text-sm text-white">Dispatch Fleet Car</h3>
+              <p className="text-[11px] text-slate-400">Allocate car, driver, and route for immediate live tracking</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer">
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form Body */}
-        <div className="p-4 sm:p-6 space-y-4">
+        {/* Content */}
+        <div className="p-5 space-y-4 text-xs">
           {successNotice ? (
-            <div className="py-12 text-center space-y-3">
-              <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full mx-auto flex items-center justify-center animate-bounce">
-                <CheckCircle className="w-8 h-8" />
+            <div className="p-6 text-center space-y-3">
+              <div className="w-12 h-12 bg-emerald-950/80 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-800/80">
+                <CheckCircle className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Trip Successfully Dispatched!</h3>
-              <p className="text-slate-500 text-xs">
-                Trip code generated. Assigned driver phone will automatically receive the trip upon login.
+              <h4 className="font-bold text-sm text-white">Trip Dispatched Successfully</h4>
+              <p className="text-slate-400 text-xs">
+                Bus will begin broadcasting live telemetry to dispatch once the driver initiates the shift.
               </p>
             </div>
           ) : (
             <>
-              {/* 1. Select Route */}
+              {/* Bus Selection */}
               <div>
-                <label className="text-slate-700 font-semibold block mb-1.5 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>1. Select Bus Route Corridor (§4)</span>
-                </label>
-                <select
-                  value={selectedRoute}
-                  onChange={(e) => setSelectedRoute(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
-                >
-                  {availableRoutes.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.code} — {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 2. Select Car */}
-              <div>
-                <label className="text-slate-700 font-semibold block mb-1.5 flex items-center gap-1.5">
-                  <Car className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>2. Assign Car Vehicle (Registration)</span>
+                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
+                  <Car className="w-3.5 h-3.5 text-indigo-400" /> Select Transit Bus
                 </label>
                 <select
                   value={selectedBus}
                   onChange={(e) => setSelectedBus(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100 font-mono"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-indigo-500"
                 >
                   {availableBuses.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.reg} • Depot: {b.depot}
+                      {b.reg} — [{b.depot}]
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* 3. Assign Driver */}
+              {/* Driver Selection */}
               <div>
-                <label className="text-slate-700 font-semibold block mb-1.5 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>3. Assign Verified Driver (DPDP Consent Verified)</span>
+                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-emerald-400" /> Assigned Bus Driver
                 </label>
                 <select
                   value={selectedDriver}
                   onChange={(e) => setSelectedDriver(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-indigo-500"
                 >
                   {availableDrivers.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.name} ({d.license}) • {d.phone}
+                      {d.name} ({d.license}) — {d.phone}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* 4. Scheduled Time */}
+              {/* Route Corridor */}
               <div>
-                <label className="text-slate-700 font-semibold block mb-1.5 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>4. Departure Schedule Time</span>
+                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-rose-400" /> Operating Route Corridor
+                </label>
+                <select
+                  value={selectedRoute}
+                  onChange={(e) => setSelectedRoute(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-indigo-500"
+                >
+                  {availableRoutes.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.code} • {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Scheduled Start Time */}
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" /> Scheduled Departure Time
                 </label>
                 <input
                   type="time"
                   value={plannedTime}
                   onChange={(e) => setPlannedTime(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-100 font-mono"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="border-t border-slate-100 pt-4 flex items-center justify-end gap-2.5">
+              <div className="pt-3 flex gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition cursor-pointer"
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold transition cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -201,9 +194,9 @@ export const DispatchTripModal: React.FC<DispatchTripModalProps> = ({
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleDispatch}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold shadow-md shadow-indigo-600/30 transition disabled:opacity-60 cursor-pointer"
                 >
-                  {isSubmitting ? 'Dispatching...' : 'Dispatch Trip Now'}
+                  {isSubmitting ? 'Confirming Dispatch...' : 'Confirm & Dispatch'}
                 </button>
               </div>
             </>
