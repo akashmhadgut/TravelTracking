@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Car,
   User,
@@ -21,8 +21,18 @@ import {
   Edit3,
   Paperclip,
   Check,
+  Search,
+  Trash2,
+  Clock,
+  Users,
+  Wrench,
+  Smartphone,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 import { RouteCorridorMapModal, RouteCorridorData } from './RouteCorridorMapModal';
+import { DispatchTripModal } from './DispatchTripModal';
 
 export interface VehicleMandatoryDocs {
   rc: { docNo: string; validUntil: string; status: 'verified' | 'pending' | 'expiring_soon' };
@@ -49,6 +59,7 @@ export interface BusItem {
   capacity: number;
   tracking_source: string;
   is_active: boolean;
+  status?: 'active' | 'on_trip' | 'maintenance' | 'inactive';
   documents: VehicleMandatoryDocs;
 }
 
@@ -64,12 +75,104 @@ export interface DriverItem {
   documents: DriverRequiredDocs;
 }
 
-export const FleetManagementView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'buses' | 'drivers' | 'routes'>('buses');
+export type CarItem = BusItem;
+
+export const generateDemoCars = (): BusItem[] => {
+  return [];
+};
+
+export const generateDemoDrivers = (): DriverItem[] => {
+  return [];
+};
+
+export interface FleetManagementViewProps {
+  initialTab?: 'cars' | 'drivers' | 'routes' | 'trips';
+  onTabChange?: (tab: 'cars' | 'drivers' | 'routes' | 'trips') => void;
+  hideHeaderTabs?: boolean;
+}
+
+export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initialTab = 'cars', onTabChange, hideHeaderTabs = false }) => {
+  const [activeTab, setActiveTab] = useState<'cars' | 'drivers' | 'routes'>(
+    initialTab === 'trips' ? 'routes' : (initialTab as any)
+  );
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab === 'trips' ? 'routes' : initialTab);
+    }
+  }, [initialTab]);
+
+  const handleTabClick = (tab: 'cars' | 'drivers' | 'routes' | 'trips') => {
+    const target = tab === 'trips' ? 'routes' : tab;
+    setActiveTab(target);
+    onTabChange?.(target);
+  };
 
   // Selected for Document Vault Inspection Modals
   const [selectedBusForDocs, setSelectedCarForDocs] = useState<BusItem | null>(null);
   const [selectedDriverForDocs, setSelectedDriverForDocs] = useState<DriverItem | null>(null);
+  // Selected Trip for Detailed Dossier Inspector Modal
+  const [selectedTripForDetails, setSelectedTripForDetails] = useState<any | null>(null);
+
+  // Quick Inline Status Update for Vehicles (Cars)
+  const handleQuickChangeCarStatus = async (
+    carId: string,
+    nextStatus: 'active' | 'on_trip' | 'maintenance' | 'inactive'
+  ) => {
+    const nextIsActive = nextStatus === 'active' || nextStatus === 'on_trip';
+    setBuses((prev) =>
+      prev.map((b) => (b.id === carId ? { ...b, status: nextStatus, is_active: nextIsActive } : b))
+    );
+    try {
+      await fetch(`/v1/buses/${carId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus, is_active: nextIsActive }),
+      });
+    } catch {}
+  };
+
+  // Quick Inline Duty Status Update for Drivers
+  const handleQuickChangeDriverDuty = async (driverId: string, nextDuty: string) => {
+    setDrivers((prev) =>
+      prev.map((d) => (d.id === driverId ? { ...d, duty_status: nextDuty } : d))
+    );
+    try {
+      await fetch(`/v1/drivers/${driverId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duty_status: nextDuty }),
+      });
+    } catch {}
+  };
+
+  // Handle Trip Status Update (Start / Complete / Cancel)
+  const handleUpdateTripStatus = async (
+    tripId: string,
+    nextStatus: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
+  ) => {
+    setTrips((prev: any[]) =>
+      prev.map((t: any) => (t.id === tripId ? { ...t, status: nextStatus } : t))
+    );
+    if (selectedTripForDetails && selectedTripForDetails.id === tripId) {
+      setSelectedTripForDetails((prev: any) => ({ ...prev, status: nextStatus }));
+    }
+    const targetTrip = trips.find((t: any) => t.id === tripId);
+    if (targetTrip?.bus_id) {
+      if (nextStatus === 'in_progress') {
+        handleQuickChangeCarStatus(targetTrip.bus_id, 'on_trip');
+      } else if (nextStatus === 'completed') {
+        handleQuickChangeCarStatus(targetTrip.bus_id, 'active');
+      }
+    }
+    try {
+      await fetch(`/v1/trips/${tripId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+    } catch {}
+  };
   // Document Viewer Lightbox State
   interface DocPreviewData {
     title: string;
@@ -84,19 +187,7 @@ export const FleetManagementView: React.FC = () => {
   }
 
   const [previewDoc, setPreviewDoc] = useState<DocPreviewData | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<Record<string, { name: string; size: string; url: string }>>({
-    'MH-12-DT-0001_rc': { name: 'nexon_form23_rc_signed.pdf', size: '1.4 MB', url: '' },
-    'MH-12-DT-0001_tax': { name: 'gras_roadtax_receipt_2026.pdf', size: '420 KB', url: '' },
-    'MH-12-DT-0001_puc': { name: 'puc_certificate_rto_shivajinagar.pdf', size: '310 KB', url: '' },
-    'MH-12-DT-0001_ins': { name: 'hdfc_ergo_commercial_policy.pdf', size: '2.1 MB', url: '' },
-    'MH-12-DT-0001_permit': { name: 'permit_contract_carriage_mh12.pdf', size: '890 KB', url: '' },
-    'MH-12-DT-0001_fitness': { name: 'rto_fitness_certificate_form38.pdf', size: '750 KB', url: '' },
-    'driver_1_aadhaar': { name: 'ganesh_jadhav_aadhaar_card.pdf', size: '640 KB', url: '' },
-    'driver_1_police': { name: 'police_clearance_kothrud_stn.pdf', size: '810 KB', url: '' },
-    'driver_1_medical': { name: 'medical_fitness_form1a_certified.pdf', size: '520 KB', url: '' },
-    'driver_1_license': { name: 'commercial_driving_license_smartcard.pdf', size: '1.1 MB', url: '' },
-    'driver_1_photo': { name: 'driver_official_photo_id.jpg', size: '320 KB', url: '' },
-  });
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, { name: string; size: string; url: string }>>({});
 
   const handleFileUpload = (docKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -133,77 +224,9 @@ export const FleetManagementView: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  // Buses State with Client's 6 Mandatory Vehicle Documents
-  const [buses, setBuses] = useState<BusItem[]>([
-    {
-      id: '1',
-      reg_no: 'MH-12-DT-0001',
-      make: 'Tata Motors',
-      model: 'Nexon EV Max',
-      capacity: 5,
-      tracking_source: 'phone',
-      is_active: true,
-      documents: {
-        rc: { docNo: 'MH12-2023-008914', validUntil: '2038-03-15', status: 'verified' },
-        roadTax: { receiptNo: 'RTX-MH12-2023-4412', validUntil: '2028-03-31', status: 'verified' },
-        puc: { certNo: 'PUC-MH12-887412', validUntil: '2027-04-10', status: 'verified' },
-        insurance: { policyNo: 'HDFC-ERGO-COMM-991823', insurer: 'HDFC ERGO General Insurance', validUntil: '2027-08-20', status: 'verified' },
-        permit: { permitNo: 'MH-12-CP-2023-1102', type: 'Contract Carriage (Corporate Cab)', validUntil: '2028-05-15', status: 'verified' },
-        fitness: { certNo: 'FC-RTO-PUN-2024-991', validUntil: '2027-06-30', status: 'verified' },
-      },
-    },
-    {
-      id: '2',
-      reg_no: 'MH-12-DT-0002',
-      make: 'MG Motor',
-      model: 'ZS EV Exclusive',
-      capacity: 5,
-      tracking_source: 'phone',
-      is_active: true,
-      documents: {
-        rc: { docNo: 'MH12-2023-009122', validUntil: '2038-06-20', status: 'verified' },
-        roadTax: { receiptNo: 'RTX-MH12-2023-5590', validUntil: '2028-06-30', status: 'verified' },
-        puc: { certNo: 'PUC-MH12-991044', validUntil: '2027-02-15', status: 'verified' },
-        insurance: { policyNo: 'BAJAJ-ALLIANZ-771899', insurer: 'Bajaj Allianz Commercial', validUntil: '2027-07-12', status: 'verified' },
-        permit: { permitNo: 'MH-12-CP-2023-1250', type: 'Contract Carriage (Corporate Cab)', validUntil: '2028-07-01', status: 'verified' },
-        fitness: { certNo: 'FC-RTO-PUN-2024-1044', validUntil: '2027-08-15', status: 'verified' },
-      },
-    },
-    {
-      id: '3',
-      reg_no: 'MH-12-DT-0003',
-      make: 'Hyundai',
-      model: 'Ioniq 5 Electric',
-      capacity: 5,
-      tracking_source: 'phone',
-      is_active: true,
-      documents: {
-        rc: { docNo: 'MH12-2024-001889', validUntil: '2039-01-10', status: 'verified' },
-        roadTax: { receiptNo: 'RTX-MH12-2024-0120', validUntil: '2029-01-31', status: 'verified' },
-        puc: { certNo: 'PUC-MH12-104921', validUntil: '2026-11-15', status: 'expiring_soon' },
-        insurance: { policyNo: 'ICICI-LOMBARD-448102', insurer: 'ICICI Lombard General', validUntil: '2027-03-25', status: 'verified' },
-        permit: { permitNo: 'MH-12-AITP-2024-009', type: 'All India Tourist Permit', validUntil: '2029-01-15', status: 'verified' },
-        fitness: { certNo: 'FC-RTO-PUN-2025-0112', validUntil: '2028-01-10', status: 'verified' },
-      },
-    },
-    {
-      id: '4',
-      reg_no: 'MH-12-DT-0004',
-      make: 'Mahindra',
-      model: 'XUV400 EV Pro',
-      capacity: 5,
-      tracking_source: 'phone',
-      is_active: true,
-      documents: {
-        rc: { docNo: 'MH12-2024-004512', validUntil: '2039-05-18', status: 'verified' },
-        roadTax: { receiptNo: 'RTX-MH12-2024-1189', validUntil: '2029-05-31', status: 'verified' },
-        puc: { certNo: 'PUC-MH12-330198', validUntil: '2027-05-10', status: 'verified' },
-        insurance: { policyNo: 'TATA-AIG-COMM-229104', insurer: 'Tata AIG General Insurance', validUntil: '2027-06-18', status: 'verified' },
-        permit: { permitNo: 'MH-12-CP-2024-3310', type: 'Contract Carriage (Corporate Cab)', validUntil: '2029-05-18', status: 'verified' },
-        fitness: { certNo: 'FC-RTO-PUN-2025-0489', validUntil: '2028-05-18', status: 'verified' },
-      },
-    },
-  ]);
+  // 100 Cars State with Client's 6 Mandatory Vehicle Documents
+  const [buses, setBuses] = useState<BusItem[]>(() => generateDemoCars());
+  const [carSearch, setCarSearch] = useState('');
 
   // Add Car Modal Form State
   const [showAddBusModal, setShowAddBusModal] = useState(false);
@@ -235,6 +258,16 @@ export const FleetManagementView: React.FC = () => {
   const [editCapacity, setEditCapacity] = useState(5);
   const [editTrackingSource, setEditTrackingSource] = useState('phone');
   const [editIsActive, setEditIsActive] = useState(true);
+  const [editCarStatus, setEditCarStatus] = useState<'active' | 'on_trip' | 'maintenance' | 'inactive'>('active');
+
+  // Filter & Pagination States
+  const [carStatusFilter, setCarStatusFilter] = useState<'all' | 'active' | 'on_trip' | 'maintenance' | 'inactive'>('all');
+  const [carCurrentPage, setCarCurrentPage] = useState(1);
+  const [carPageSize] = useState(15);
+
+  const [driverDutyFilter, setDriverDutyFilter] = useState<'all' | 'on_duty' | 'available' | 'off_duty' | 'inactive'>('all');
+  const [driverCurrentPage, setDriverCurrentPage] = useState(1);
+  const [driverPageSize] = useState(15);
   const [editRcNo, setEditRcNo] = useState('');
   const [editRcValid, setEditRcValid] = useState('');
   const [editRoadTaxNo, setEditRoadTaxNo] = useState('');
@@ -264,60 +297,52 @@ export const FleetManagementView: React.FC = () => {
   const [editDriverDoctorName, setEditDriverDoctorName] = useState('');
   const [editDriverDocFiles, setEditDriverDocFiles] = useState<Record<string, { name: string; size: string; url: string }>>({});
 
-  // Drivers State with Client's 5 Required Driver Documents
-  const [drivers, setDrivers] = useState<DriverItem[]>([
-    {
-      id: '1',
-      name: 'Ganesh Jadhav',
-      phone: '+919822001122',
-      license: 'MH-14-2018-0045129',
-      class: 'HMV-Passenger',
-      address: 'Kothrud, Pune',
-      pin: '123456',
-      duty_status: 'on_duty',
-      documents: {
-        aadhaar: { docNo: 'XXXX-XXXX-4812', status: 'verified' },
-        policeVerification: { certNo: 'PUN-POL-2024-1189', policeStation: 'Kothrud Police Station', validUntil: '2027-11-20', status: 'verified' },
-        medicalFitness: { certNo: 'MED-FIT-88914', doctorName: 'Dr. S. K. Joshi (MBBS)', doctorReg: 'MMC-2004-0981', validUntil: '2027-10-15', status: 'verified' },
-        drivingLicence: { licenseNo: 'MH-14-2018-0045129', classType: 'HMV-Passenger (Commercial)', validUntil: '2029-04-18', status: 'verified' },
-        contactNumber: { phone: '+919822001122', isVerified: true },
-      },
-    },
-    {
-      id: '2',
-      name: 'Sunil Patil',
-      phone: '+919822003344',
-      license: 'MH-12-2019-0098432',
-      class: 'HMV-Passenger',
-      address: 'Hadapsar, Pune',
-      pin: '654321',
-      duty_status: 'on_duty',
-      documents: {
-        aadhaar: { docNo: 'XXXX-XXXX-8921', status: 'verified' },
-        policeVerification: { certNo: 'PUN-POL-2024-2204', policeStation: 'Hadapsar Police Station', validUntil: '2027-09-10', status: 'verified' },
-        medicalFitness: { certNo: 'MED-FIT-99120', doctorName: 'Dr. A. N. Kulkarni (MD)', doctorReg: 'MMC-1998-1145', validUntil: '2027-08-30', status: 'verified' },
-        drivingLicence: { licenseNo: 'MH-12-2019-0098432', classType: 'HMV-Passenger (Commercial)', validUntil: '2029-08-11', status: 'verified' },
-        contactNumber: { phone: '+919822003344', isVerified: true },
-      },
-    },
-    {
-      id: '3',
-      name: 'Ramesh More',
-      phone: '+919822005566',
-      license: 'MH-14-2020-0012876',
-      class: 'HMV-Passenger',
-      address: 'Nigdi, Pune',
-      pin: '112233',
-      duty_status: 'off_duty',
-      documents: {
-        aadhaar: { docNo: 'XXXX-XXXX-3341', status: 'verified' },
-        policeVerification: { certNo: 'PUN-POL-2024-3419', policeStation: 'Nigdi Police Station', validUntil: '2026-12-05', status: 'expiring_soon' },
-        medicalFitness: { certNo: 'MED-FIT-77142', doctorName: 'Dr. V. B. Shinde (MBBS)', doctorReg: 'MMC-2012-0451', validUntil: '2027-04-12', status: 'verified' },
-        drivingLicence: { licenseNo: 'MH-14-2020-0012876', classType: 'HMV-Passenger (Commercial)', validUntil: '2030-01-20', status: 'verified' },
-        contactNumber: { phone: '+919822005566', isVerified: true },
-      },
-    },
-  ]);
+  // 100 Drivers State with Client's 5 Required Driver Documents
+  const [drivers, setDrivers] = useState<DriverItem[]>(() => generateDemoDrivers());
+  const [driverSearch, setDriverSearch] = useState('');
+
+  const filteredCars = useMemo(() => {
+    return buses.filter((b) => {
+      const bStatus = b.status || (b.is_active ? 'active' : 'inactive');
+      const matchesStatus = carStatusFilter === 'all' || bStatus === carStatusFilter;
+      const q = carSearch.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        b.reg_no.toLowerCase().includes(q) ||
+        b.make.toLowerCase().includes(q) ||
+        b.model.toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [buses, carSearch, carStatusFilter]);
+
+  const paginatedCars = useMemo(() => {
+    const start = (carCurrentPage - 1) * carPageSize;
+    return filteredCars.slice(start, start + carPageSize);
+  }, [filteredCars, carCurrentPage, carPageSize]);
+
+  const totalCarPages = Math.ceil(filteredCars.length / carPageSize);
+
+  const filteredDrivers = useMemo(() => {
+    return drivers.filter((d) => {
+      const dDuty = d.duty_status || 'on_duty';
+      const matchesFilter = driverDutyFilter === 'all' || dDuty === driverDutyFilter;
+      const q = driverSearch.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        d.name.toLowerCase().includes(q) ||
+        d.phone.toLowerCase().includes(q) ||
+        d.license.toLowerCase().includes(q) ||
+        d.address.toLowerCase().includes(q);
+      return matchesFilter && matchesSearch;
+    });
+  }, [drivers, driverSearch, driverDutyFilter]);
+
+  const paginatedDrivers = useMemo(() => {
+    const start = (driverCurrentPage - 1) * driverPageSize;
+    return filteredDrivers.slice(start, start + driverPageSize);
+  }, [filteredDrivers, driverCurrentPage, driverPageSize]);
+
+  const totalDriverPages = Math.ceil(filteredDrivers.length / driverPageSize);
 
   // Add Driver Modal Form State
   const [showAddDriverModal, setShowAddDriverModal] = useState(false);
@@ -330,36 +355,46 @@ export const FleetManagementView: React.FC = () => {
   const [newDoctorName, setNewDoctorName] = useState('Dr. P. R. Deshmukh (MBBS, MMC-2010)');
   const [newDriverDocFiles, setNewDriverDocFiles] = useState<Record<string, { name: string; size: string; url: string }>>({});
 
-  // Routes State
-  const [routes, setRoutes] = useState([
-    { id: '1', code: 'RT-501', name: 'Swargate to Nigdi Express', distance_km: 24.5, stops: ['Swargate Terminal', 'Shivajinagar', 'Khadki', 'Chinchwad', 'Nigdi'] },
-    { id: '2', code: 'RT-505', name: 'Katraj to Hinjawadi IT Park', distance_km: 31.2, stops: ['Katraj Depot', 'Warje Flyover', 'Chandani Chowk', 'Baner', 'Hinjawadi Phase 3'] },
-  ]);
+  // Routes State & Edit Route Modal
+  const [routes, setRoutes] = useState<any[]>([]);
   const [showAddRouteModal, setShowAddRouteModal] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<any | null>(null);
+  const [editingRouteCode, setEditingRouteCode] = useState<string>('');
+  const [editingRouteName, setEditingRouteName] = useState<string>('');
+  const [editingRouteDistance, setEditingRouteDistance] = useState<number>(20);
+  const [editingRouteDuration, setEditingRouteDuration] = useState<number>(30);
+  const [editingRouteStops, setEditingRouteStops] = useState<string[]>([]);
+
+  // Trips & Scheduling State (Date & Time Configuration)
+  const [trips, setTrips] = useState<any[]>([]);
+  const [selectedTripForEdit, setSelectedTripForEdit] = useState<any | null>(null);
+  const [showDispatchTripModalInFleet, setShowDispatchTripModalInFleet] = useState(false);
 
   // Sync with live PostgreSQL backend
   useEffect(() => {
     fetch('/v1/buses')
       .then((res) => res.json())
       .then((data) => {
-        if (data?.items?.length) {
-          setBuses(data.items.map((b: any, idx: number) => ({
+        if (Array.isArray(data?.items)) {
+          const serverCars = data.items.map((b: any, idx: number) => ({
             id: b.id,
             reg_no: b.reg_no,
             make: b.make || 'Tata Motors',
             model: b.model || 'Nexon EV Max',
-            capacity: b.capacity || 45,
+            capacity: b.capacity || 5,
             tracking_source: b.tracking_source || 'phone',
             is_active: b.is_active !== false,
+            status: b.status || (b.is_active !== false ? 'active' : 'inactive'),
             documents: {
-              rc: { docNo: 'MH12-2024-' + (1000 + idx), validUntil: '2039-01-01', status: 'verified' },
-              roadTax: { receiptNo: 'RTX-' + b.reg_no + '-2026', validUntil: '2029-03-31', status: 'verified' },
-              puc: { certNo: 'PUC-' + b.reg_no + '-01', validUntil: '2027-04-01', status: 'verified' },
-              insurance: { policyNo: 'INS-' + b.reg_no + '-99', insurer: 'HDFC ERGO Commercial', validUntil: '2027-08-20', status: 'verified' },
-              permit: { permitNo: 'PMT-' + b.reg_no + '-01', type: 'Contract Carriage (Corporate Cab)', validUntil: '2029-01-01', status: 'verified' },
-              fitness: { certNo: 'FC-' + b.reg_no + '-001', validUntil: '2028-06-30', status: 'verified' },
+              rc: { docNo: b.documents?.rc?.doc_number || b.documents?.rc?.docNo || ('MH12-2024-' + (1000 + idx)), validUntil: '2039-01-01', status: 'verified' },
+              roadTax: { receiptNo: b.documents?.road_tax?.receipt_number || b.documents?.roadTax?.receiptNo || ('RTX-' + b.reg_no + '-2026'), validUntil: '2029-03-31', status: 'verified' },
+              puc: { certNo: b.documents?.puc?.cert_number || b.documents?.puc?.certNo || ('PUC-' + b.reg_no + '-01'), validUntil: '2027-04-01', status: 'verified' },
+              insurance: { policyNo: b.documents?.insurance?.policy_number || b.documents?.insurance?.policyNo || ('INS-' + b.reg_no + '-99'), insurer: 'HDFC ERGO Commercial', validUntil: '2027-08-20', status: 'verified' },
+              permit: { permitNo: b.documents?.permit?.permit_number || b.documents?.permit?.permitNo || ('PMT-' + b.reg_no + '-01'), type: 'Contract Carriage (Corporate Cab)', validUntil: '2029-01-01', status: 'verified' },
+              fitness: { certNo: b.documents?.fitness?.cert_number || b.documents?.fitness?.certNo || ('FC-' + b.reg_no + '-001'), validUntil: '2028-06-30', status: 'verified' },
             },
-          })));
+          }));
+          setBuses(serverCars);
         }
       })
       .catch(() => { });
@@ -367,8 +402,8 @@ export const FleetManagementView: React.FC = () => {
     fetch('/v1/drivers')
       .then((res) => res.json())
       .then((data) => {
-        if (data?.items?.length) {
-          setDrivers(data.items.map((d: any, idx: number) => ({
+        if (Array.isArray(data?.items)) {
+          const serverDrivers = data.items.map((d: any, idx: number) => ({
             id: d.id,
             name: d.name || ('Driver ' + (idx + 1)),
             phone: d.phone || ('+91982200' + (1000 + idx)),
@@ -376,7 +411,7 @@ export const FleetManagementView: React.FC = () => {
             class: d.licence_class || 'HMV-Passenger',
             address: d.address || 'Pune, MH',
             pin: '123456',
-            duty_status: d.duty_status || 'on_duty',
+            duty_status: d.duty_status || 'available',
             documents: {
               aadhaar: { docNo: 'XXXX-XXXX-' + (1000 + idx), status: 'verified' },
               policeVerification: { certNo: 'PUN-POL-' + (2000 + idx), policeStation: 'Shivajinagar Police Station', validUntil: '2027-12-31', status: 'verified' },
@@ -384,7 +419,8 @@ export const FleetManagementView: React.FC = () => {
               drivingLicence: { licenseNo: d.license || ('MH-14-2020-00' + (1000 + idx)), classType: 'HMV-Passenger (Commercial)', validUntil: '2030-05-15', status: 'verified' },
               contactNumber: { phone: d.phone || ('+91982200' + (1000 + idx)), isVerified: true },
             },
-          })));
+          }));
+          setDrivers(serverDrivers);
         }
       })
       .catch(() => { });
@@ -392,12 +428,82 @@ export const FleetManagementView: React.FC = () => {
     fetch('/v1/routes')
       .then((res) => res.json())
       .then((data) => {
-        if (data?.items?.length) {
+        if (Array.isArray(data?.items)) {
           setRoutes(data.items);
         }
       })
       .catch(() => { });
+
+    fetch('/v1/trips')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data?.items)) {
+          setTrips(data.items);
+        }
+      })
+      .catch(() => { });
   }, []);
+
+  // Handle Delete Trip
+  const handleDeleteTrip = async (tripId: string) => {
+    if (!window.confirm('Are you sure you want to delete / cancel this scheduled trip?')) return;
+    try {
+      await fetch(`/v1/trips/${tripId}`, { method: 'DELETE' });
+    } catch {}
+    setTrips((prev: any) => prev.filter((t: any) => t.id !== tripId));
+  };
+
+  // Handle Add Route & Schedule Trip via 4-Step Interactive Corridor Studio
+  const handleSaveNewRouteAndTrip = async (newRouteData: RouteCorridorData, tripData: any) => {
+    try {
+      // 1. Save Route
+      const routeRes = await fetch('/v1/routes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRouteData),
+      });
+      let createdRoute = newRouteData;
+      if (routeRes.ok) {
+        const json = await routeRes.json();
+        createdRoute = json.route || newRouteData;
+      }
+      setRoutes((prev: any) => [createdRoute, ...prev.filter((r: any) => r.code !== createdRoute.code)]);
+
+      // 2. Save Trip
+      const tripPayload = {
+        route_id: createdRoute.id || '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c2001',
+        bus_id: tripData.bus_id,
+        driver_id: tripData.driver_id,
+        planned_start: tripData.planned_start,
+        planned_end: tripData.planned_end,
+        bus_reg: tripData.bus_reg,
+        bus_model: tripData.bus_model,
+        driver_name: tripData.driver_name,
+        driver_phone: tripData.driver_phone,
+        route_code: createdRoute.code,
+        route_name: createdRoute.name,
+        shift: tripData.shift,
+        passengers: tripData.passengers,
+        status: 'scheduled',
+      };
+
+      const tripRes = await fetch('/v1/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tripPayload),
+      });
+
+      let createdTrip = { ...tripPayload, id: `trip-${Date.now()}` };
+      if (tripRes.ok) {
+        const tripJson = await tripRes.json();
+        createdTrip = { ...createdTrip, ...(tripJson.trip || {}) };
+      }
+      setTrips((prev: any) => [createdTrip, ...prev]);
+    } catch {
+      setRoutes((prev: any) => [newRouteData, ...prev.filter((r: any) => r.code !== newRouteData.code)]);
+      setTrips((prev: any) => [{ ...tripData, id: `trip-${Date.now()}` }, ...prev]);
+    }
+  };
 
   // Handle Add Route via Interactive Real Map Corridor Studio
   const handleSaveNewRoute = async (newRouteData: RouteCorridorData) => {
@@ -417,6 +523,89 @@ export const FleetManagementView: React.FC = () => {
     } catch {
       setRoutes((prev: any) => [newRouteData, ...prev.filter((r: any) => r.code !== newRouteData.code)]);
     }
+  };
+
+  // Open Edit Route Modal
+  const handleOpenEditRoute = (route: any) => {
+    setEditingRoute(route);
+    setEditingRouteCode(route.code || '');
+    setEditingRouteName(route.name || '');
+    setEditingRouteDistance(route.distance_km || 20);
+    setEditingRouteDuration(route.estimated_duration_min || 30);
+    setEditingRouteStops(
+      (route.stops || []).map((s: any) => (typeof s === 'string' ? s : s.name))
+    );
+  };
+
+  // Save Edit Route Changes
+  const handleSaveEditRoute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRoute) return;
+
+    const updated = {
+      ...editingRoute,
+      code: editingRouteCode.toUpperCase().trim(),
+      name: editingRouteName.trim(),
+      distance_km: Number(editingRouteDistance),
+      estimated_duration_min: Number(editingRouteDuration),
+      stops: editingRouteStops.filter((s) => s.trim().length > 0),
+    };
+
+    try {
+      await fetch(`/v1/routes/${editingRoute.id || editingRoute.code}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+    } catch {}
+
+    setRoutes((prev: any) =>
+      prev.map((r: any) => (r.id === editingRoute.id || r.code === editingRoute.code ? updated : r))
+    );
+    setEditingRoute(null);
+  };
+
+  // Delete Route Corridor
+  const handleDeleteRoute = async (routeId: string, routeCode: string) => {
+    if (!window.confirm(`Are you sure you want to delete route corridor ${routeCode}?`)) return;
+    try {
+      await fetch(`/v1/routes/${routeId || routeCode}`, { method: 'DELETE' });
+    } catch {}
+    setRoutes((prev: any) => prev.filter((r: any) => r.id !== routeId && r.code !== routeCode));
+  };
+
+  // Quick In-Place Rename for Stop Badges
+  const handleQuickRenameStop = async (routeId: string, stopIndex: number, newStopName: string) => {
+    if (!newStopName.trim()) return;
+    const targetRoute = routes.find((r: any) => r.id === routeId || r.code === routeId);
+    if (!targetRoute) return;
+
+    const newStops = [...(targetRoute.stops || [])];
+    newStops[stopIndex] = newStopName.trim();
+    const updated = { ...targetRoute, stops: newStops };
+
+    setRoutes((prev: any) =>
+      prev.map((r: any) => (r.id === routeId || r.code === routeId ? updated : r))
+    );
+
+    try {
+      await fetch(`/v1/routes/${targetRoute.id || targetRoute.code}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+    } catch {}
+  };
+
+  // Handle Trip Dispatch / Update
+  const handleTripUpdated = (updatedTrip: any) => {
+    setTrips((prev) => {
+      const exists = prev.some((t) => t.id === updatedTrip.id);
+      if (exists) {
+        return prev.map((t) => (t.id === updatedTrip.id ? { ...t, ...updatedTrip } : t));
+      }
+      return [updatedTrip, ...prev];
+    });
   };
 
   // Handle Add Bus with 6 Mandatory Documents and Scanned Uploads
@@ -484,6 +673,7 @@ export const FleetManagementView: React.FC = () => {
     setEditCapacity(car.capacity || 5);
     setEditTrackingSource(car.tracking_source || 'phone');
     setEditIsActive(car.is_active ?? true);
+    setEditCarStatus(car.status || (car.is_active ? 'active' : 'inactive'));
     setEditRcNo(car.documents?.rc?.docNo || `RC-${car.reg_no}`);
     setEditRcValid(car.documents?.rc?.validUntil || '2039-01-01');
     setEditRoadTaxNo(car.documents?.roadTax?.receiptNo || `RTX-${car.reg_no}`);
@@ -546,7 +736,8 @@ export const FleetManagementView: React.FC = () => {
             model: editModel,
             capacity: Number(editCapacity) || 5,
             tracking_source: editTrackingSource,
-            is_active: editIsActive,
+            is_active: editCarStatus === 'active' || editCarStatus === 'on_trip',
+            status: editCarStatus,
             documents: updatedDocs,
           }
           : b
@@ -697,98 +888,233 @@ export const FleetManagementView: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-6 space-y-4 sm:space-y-6 text-slate-800 text-xs font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
-        <div>
-          <h1 className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">Fleet & Resource Administration</h1>
-          <p className="text-slate-500 text-xs">
-            <strong className="text-indigo-600">Client Compliance Standard</strong>: Vehicles require 6 mandatory RTO documents & Drivers require 5 KYC clearances.
-          </p>
-        </div>
-
-        {/* Sub-Tab Navigation */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto max-w-full">
-          <button
-            onClick={() => setActiveTab('buses')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${activeTab === 'buses'
-              ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
-              : 'text-slate-600 hover:text-slate-900'
-              }`}
-          >
-            <Car className="w-3.5 h-3.5 shrink-0" />
-            <span>1. Cars & Documents ({buses.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('drivers')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${activeTab === 'drivers'
-              ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
-              : 'text-slate-600 hover:text-slate-900'
-              }`}
-          >
-            <User className="w-3.5 h-3.5 shrink-0" />
-            <span>2. Drivers & Dossiers ({drivers.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('routes')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${activeTab === 'routes'
-              ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
-              : 'text-slate-600 hover:text-slate-900'
-              }`}
-          >
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            <span>3. Routes ({routes.length})</span>
-          </button>
-        </div>
-      </div>
-
-      {/* TAB 1: CARS & MANDATORY VEHICLE DOCUMENTS */}
-      {activeTab === 'buses' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="font-bold text-sm text-slate-900">Mandatory Vehicle Documents Compliance Register</h2>
-              <p className="text-[11px] text-slate-500">
-                All vehicles strictly linked with: <strong>RC, Road Tax, PUC, Insurance, Permit & Fitness Certificate</strong>.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowAddBusModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Add Car & Documents</span>
-            </button>
+      {/* Header — Only displayed when not embedded inside SuperAdminView */}
+      {!hideHeaderTabs && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+          <div>
+            <h1 className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">Fleet & Resource Administration</h1>
+            <p className="text-slate-500 text-xs">
+              <strong className="text-indigo-600">Client Compliance Standard</strong>: Vehicles require 6 mandatory RTO documents & Drivers require 5 KYC clearances.
+            </p>
           </div>
 
-          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500 text-[11px] uppercase font-semibold">
-                  <th className="pb-3">Vehicle Reg No</th>
-                  <th className="pb-3">Make & Model</th>
-                  <th className="pb-3">Mandatory Documents Status</th>
-                  <th className="pb-3">Tracking Mode</th>
-                  <th className="pb-3">Fleet Status</th>
-                  <th className="pb-3 text-right">Compliance Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
-                {buses.map((b) => {
-                  const hasExpiring = b.documents && Object.values(b.documents).some((d: any) => d.status === 'expiring_soon');
+          {/* Sub-Tab Navigation */}
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto max-w-full">
+            <button
+              onClick={() => handleTabClick('cars')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
+                activeTab === 'cars'
+                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Car className="w-3.5 h-3.5 shrink-0" />
+              <span>1. Cars & Documents ({buses.length})</span>
+            </button>
+
+            <button
+              onClick={() => handleTabClick('drivers')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
+                activeTab === 'drivers'
+                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span>2. Drivers & Dossiers ({drivers.length})</span>
+            </button>
+
+            <button
+              onClick={() => handleTabClick('routes')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap ${
+                activeTab === 'routes'
+                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span>3. Routes & Scheduled Trips ({trips.length})</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 1: CARS & MANDATORY VEHICLE DOCUMENTS */}
+      {/* ========================================================================= */}
+      {activeTab === 'cars' && (
+        <div className="space-y-4">
+          {/* Top KPI Metric Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
+              <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Total Fleet</div>
+              <div className="text-2xl font-black text-slate-900 mt-1">{buses.length}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Commercial Cars</div>
+            </div>
+
+            <div className="bg-white border border-emerald-100 rounded-xl p-3.5 shadow-2xs bg-gradient-to-b from-white to-emerald-50/20">
+              <div className="text-[10px] font-bold uppercase text-emerald-700 tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Active In Fleet</span>
+              </div>
+              <div className="text-2xl font-black text-emerald-700 mt-1">
+                {buses.filter((b) => (b.status || (b.is_active ? 'active' : 'inactive')) === 'active').length}
+              </div>
+              <div className="text-[10px] text-emerald-600 mt-0.5">Ready For Dispatch</div>
+            </div>
+
+            <div className="bg-white border border-blue-100 rounded-xl p-3.5 shadow-2xs bg-gradient-to-b from-white to-blue-50/20">
+              <div className="text-[10px] font-bold uppercase text-blue-700 tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span>On Live Trip</span>
+              </div>
+              <div className="text-2xl font-black text-blue-700 mt-1">
+                {buses.filter((b) => b.status === 'on_trip').length}
+              </div>
+              <div className="text-[10px] text-blue-600 mt-0.5">In Passenger Transit</div>
+            </div>
+
+            <div className="bg-white border border-amber-100 rounded-xl p-3.5 shadow-2xs bg-gradient-to-b from-white to-amber-50/20">
+              <div className="text-[10px] font-bold uppercase text-amber-700 tracking-wider flex items-center gap-1.5">
+                <Wrench className="w-3 h-3 text-amber-600" />
+                <span>Maintenance</span>
+              </div>
+              <div className="text-2xl font-black text-amber-700 mt-1">
+                {buses.filter((b) => b.status === 'maintenance').length}
+              </div>
+              <div className="text-[10px] text-amber-600 mt-0.5">RTO / Garage Service</div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs col-span-2 sm:col-span-1">
+              <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>RTO Compliance</span>
+              </div>
+              <div className="text-2xl font-black text-emerald-600 mt-1">100%</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">6/6 Documents Linked</div>
+            </div>
+          </div>
+
+          {/* Table Container Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs">
+            {/* Header Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  <span>Mandatory Vehicle Documents Compliance Register</span>
+                  <span className="text-[10px] bg-indigo-50 text-indigo-700 font-mono font-bold px-2 py-0.5 rounded border border-indigo-200">
+                    {buses.length} CARS
+                  </span>
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  All vehicles strictly linked with: <strong>RC, Road Tax, PUC, Insurance, Permit & Fitness Certificate</strong>.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowAddBusModal(true)}
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Car & Documents</span>
+              </button>
+            </div>
+
+            {/* Filter Chips & Search Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                {(['all', 'active', 'on_trip', 'maintenance', 'inactive'] as const).map((st) => {
+                  const count = st === 'all'
+                    ? buses.length
+                    : buses.filter((b) => (b.status || (b.is_active ? 'active' : 'inactive')) === st).length;
+                  const label = st === 'all'
+                    ? 'All Cars'
+                    : st === 'active'
+                    ? 'Active in Fleet'
+                    : st === 'on_trip'
+                    ? 'On Trip'
+                    : st === 'maintenance'
+                    ? 'Maintenance'
+                    : 'Inactive';
 
                   return (
-                    <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 font-bold text-slate-900 text-xs">{b.reg_no}</td>
-                      <td className="py-3 font-sans font-medium">{b.make} — {b.model}</td>
-                      <td className="py-3 font-sans">
-                        <div className="flex items-center gap-2">
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => { setCarStatusFilter(st); setCarCurrentPage(1); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                        carStatusFilter === st
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <span>{label}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        carStatusFilter === st ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-600'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="relative shrink-0">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search cars by reg no, make..."
+                  value={carSearch}
+                  onChange={(e) => { setCarSearch(e.target.value); setCarCurrentPage(1); }}
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition w-full sm:w-60"
+                />
+              </div>
+            </div>
+
+            {/* Cars Table */}
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <table className="w-full text-left border-collapse min-w-[750px]">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-wider bg-slate-50/70">
+                    <th className="py-3 px-4 w-[18%] text-left">Vehicle Reg No</th>
+                    <th className="py-3 px-4 w-[20%] text-left">Make & Model</th>
+                    <th className="py-3 px-4 w-[22%] text-left">Mandatory Documents</th>
+                    <th className="py-3 px-4 w-[14%] text-left">Tracking Mode</th>
+                    <th className="py-3 px-4 w-[13%] text-left">Fleet Status</th>
+                    <th className="py-3 px-4 w-[13%] text-right">Compliance Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-mono text-slate-700 text-xs">
+                  {paginatedCars.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400 font-sans">
+                        <Car className="w-9 h-9 mx-auto mb-2 text-slate-300 stroke-1" />
+                        <div className="font-semibold text-slate-700 text-sm">No Vehicles Registered in Fleet</div>
+                        <div className="text-xs text-slate-400 mt-0.5">Click "+ Add Car & Documents" above to register and verify mandatory RTO compliance.</div>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedCars.map((b) => {
+                    const hasExpiring = b.documents && Object.values(b.documents).some((d: any) => d.status === 'expiring_soon');
+                    const carStatus = b.status || (b.is_active ? 'active' : 'inactive');
+
+                    return (
+                      <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold text-slate-900 text-xs font-mono">{b.reg_no}</div>
+                          <div className="text-[10px] text-slate-400 font-sans">{b.capacity || 5} Seater Sedan / SUV</div>
+                        </td>
+                        <td className="p-3 font-sans font-medium">
+                          <div className="font-bold text-slate-800 text-xs">{b.make}</div>
+                          <div className="text-[11px] text-slate-500">{b.model}</div>
+                        </td>
+                        <td className="p-3 font-sans">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${hasExpiring
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              }`}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                              hasExpiring
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            }`}
                           >
                             {hasExpiring ? (
                               <>
@@ -802,206 +1128,868 @@ export const FleetManagementView: React.FC = () => {
                               </>
                             )}
                           </span>
-                        </div>
-                      </td>
-                      <td className="py-3 uppercase text-indigo-600 font-bold text-[10px]">Android / iOS Phone</td>
-                      <td className="py-3 text-emerald-600 font-sans font-semibold">Active In Fleet</td>
-                      <td className="py-3 text-right font-sans">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setSelectedCarForDocs(b)}
-                            className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
-                          >
-                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>Inspect 6 Docs</span>
-                          </button>
-                          <button
-                            onClick={() => handleOpenEditCar(b)}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
-                          >
-                            <Edit3 className="w-3.5 h-3.5 text-slate-600" />
-                            <span>Edit Car & Docs</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="p-3 font-sans">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200/70 text-indigo-700 text-xs font-semibold whitespace-nowrap">
+                            <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
+                            <span>Mobile App GPS</span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 w-[13%] text-left font-sans align-middle">
+                          <div className="relative inline-block group">
+                            <select
+                              value={carStatus}
+                              onChange={(e) => handleQuickChangeCarStatus(b.id, e.target.value as any)}
+                              title="Click to change Fleet Operating Status"
+                              className={`text-xs font-bold rounded-full py-1 pl-2.5 pr-6 appearance-none cursor-pointer border transition shadow-2xs outline-none focus:ring-2 focus:ring-indigo-400 font-sans ${
+                                carStatus === 'active'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                                  : carStatus === 'on_trip'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+                                  : carStatus === 'maintenance'
+                                  ? 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+                                  : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+                              }`}
+                            >
+                              <option value="active">● Active In Fleet</option>
+                              <option value="on_trip">● On Active Trip</option>
+                              <option value="maintenance">● Maintenance</option>
+                              <option value="inactive">● Inactive</option>
+                            </select>
+                            <ChevronDown className="w-3 h-3 absolute right-1.5 top-2.5 pointer-events-none text-slate-400 group-hover:text-slate-700" />
+                          </div>
+                        </td>
+                        <td className="p-3 text-right font-sans">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setSelectedCarForDocs(b)}
+                              className="px-2.5 py-1 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Inspect 6 Docs</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditCar(b)}
+                              className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Edit Car & Docs</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls for Cars */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
+              <div>
+                Showing <span className="font-bold text-slate-900">{filteredCars.length === 0 ? 0 : (carCurrentPage - 1) * carPageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(carCurrentPage * carPageSize, filteredCars.length)}</span> of <span className="font-bold text-slate-900">{filteredCars.length}</span> cars
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={carCurrentPage === 1}
+                  onClick={() => setCarCurrentPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Prev</span>
+                </button>
+                <div className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-mono font-bold text-slate-800">
+                  Page {carCurrentPage} of {totalCarPages || 1}
+                </div>
+                <button
+                  type="button"
+                  disabled={carCurrentPage >= totalCarPages}
+                  onClick={() => setCarCurrentPage((p) => Math.min(totalCarPages, p + 1))}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
+      {/* ========================================================================= */}
       {/* TAB 2: DRIVERS & MANDATORY REQUIRED DOCUMENTS */}
+      {/* ========================================================================= */}
       {activeTab === 'drivers' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="font-bold text-sm text-slate-900">Driver Roster & Mandatory KYC Dossier Register</h2>
-              <p className="text-[11px] text-slate-500">
-                All drivers linked with: <strong>Aadhaar Card, Police Verification, Medical Fitness, Driving Licence & Contact Number</strong>.
-              </p>
+        <div className="space-y-4">
+          {/* Top KPI Metric Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
+              <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Total Drivers</div>
+              <div className="text-2xl font-black text-slate-900 mt-1">{drivers.length}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Enrolled Roster</div>
             </div>
-            <button
-              onClick={() => setShowAddDriverModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Enroll Driver & Docs</span>
-            </button>
+
+            <div className="bg-white border border-emerald-100 rounded-xl p-3.5 shadow-2xs bg-gradient-to-b from-white to-emerald-50/20">
+              <div className="text-[10px] font-bold uppercase text-emerald-700 tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>On Active Duty</span>
+              </div>
+              <div className="text-2xl font-black text-emerald-700 mt-1">
+                {drivers.filter((d) => (d.duty_status || 'on_duty') === 'on_duty').length}
+              </div>
+              <div className="text-[10px] text-emerald-600 mt-0.5">Assigned Shift</div>
+            </div>
+
+            <div className="bg-white border border-blue-100 rounded-xl p-3.5 shadow-2xs bg-gradient-to-b from-white to-blue-50/20">
+              <div className="text-[10px] font-bold uppercase text-blue-700 tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <span>Available / Standby</span>
+              </div>
+              <div className="text-2xl font-black text-blue-700 mt-1">
+                {drivers.filter((d) => d.duty_status === 'available').length}
+              </div>
+              <div className="text-[10px] text-blue-600 mt-0.5">Ready For Dispatch</div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
+              <div className="text-[10px] font-bold uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-slate-500" />
+                <span>Off Duty / Inactive</span>
+              </div>
+              <div className="text-2xl font-black text-slate-700 mt-1">
+                {drivers.filter((d) => d.duty_status === 'off_duty' || d.duty_status === 'inactive').length}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-0.5">Shift Complete / Leave</div>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs col-span-2 sm:col-span-1">
+              <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>KYC Compliance</span>
+              </div>
+              <div className="text-2xl font-black text-emerald-600 mt-1">100%</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">5/5 Dossiers Cleared</div>
+            </div>
           </div>
 
-          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500 text-[11px] uppercase font-semibold">
-                  <th className="pb-3">Driver Name</th>
-                  <th className="pb-3">Verified Contact</th>
-                  <th className="pb-3">License Number</th>
-                  <th className="pb-3">Mandatory Dossier</th>
-                  <th className="pb-3">Duty Status</th>
-                  <th className="pb-3 text-right">Dossier Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
-                {drivers.map((d) => {
-                  const hasExpiring = d.documents && Object.values(d.documents).some((doc: any) => doc.status === 'expiring_soon');
+          {/* Table Container Card */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs">
+            {/* Header Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  <span>Driver Roster & Mandatory KYC Dossier Register</span>
+                  <span className="text-[10px] bg-indigo-50 text-indigo-700 font-mono font-bold px-2 py-0.5 rounded border border-indigo-200">
+                    {drivers.length} DRIVERS
+                  </span>
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  All drivers linked with: <strong>Aadhaar Card, Police Verification, Medical Fitness, Driving Licence & Contact Number</strong>.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowAddDriverModal(true)}
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Enroll Driver & Docs</span>
+              </button>
+            </div>
+
+            {/* Filter Chips & Search Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                {(['all', 'on_duty', 'available', 'off_duty', 'inactive'] as const).map((st) => {
+                  const count = st === 'all'
+                    ? drivers.length
+                    : drivers.filter((d) => (d.duty_status || 'on_duty') === st).length;
+                  const label = st === 'all'
+                    ? 'All Drivers'
+                    : st === 'on_duty'
+                    ? 'On Duty'
+                    : st === 'available'
+                    ? 'Available'
+                    : st === 'off_duty'
+                    ? 'Off Duty'
+                    : 'Inactive';
 
                   return (
-                    <tr key={d.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 font-bold font-sans text-slate-900 text-xs">{d.name}</td>
-                      <td className="py-3 text-indigo-600 font-semibold">{d.phone}</td>
-                      <td className="py-3 font-semibold text-slate-800">{d.license}</td>
-                      <td className="py-3 font-sans">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${hasExpiring
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            }`}
-                        >
-                          {hasExpiring ? (
-                            <>
-                              <AlertTriangle className="w-3 h-3 text-amber-600" />
-                              <span>5/5 (Police Clear Due)</span>
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                              <span>5/5 Dossier Approved</span>
-                            </>
-                          )}
-                        </span>
-                      </td>
-                      <td className="py-3 font-sans">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          ON DUTY
-                        </span>
-                      </td>
-                      <td className="py-3 text-right font-sans">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setSelectedDriverForDocs(d)}
-                            className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
-                          >
-                            <Award className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>View 5 Docs</span>
-                          </button>
-                          <button
-                            onClick={() => handleOpenEditDriver(d)}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
-                          >
-                            <Edit3 className="w-3.5 h-3.5 text-slate-600" />
-                            <span>Edit Driver</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => { setDriverDutyFilter(st); setDriverCurrentPage(1); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                        driverDutyFilter === st
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <span>{label}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        driverDutyFilter === st ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-600'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+
+              <div className="relative shrink-0">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search drivers by name, phone..."
+                  value={driverSearch}
+                  onChange={(e) => { setDriverSearch(e.target.value); setDriverCurrentPage(1); }}
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 focus:bg-white transition w-full sm:w-60"
+                />
+              </div>
+            </div>
+
+            {/* Drivers Table */}
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <table className="w-full text-left border-collapse min-w-[750px]">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-wider bg-slate-50/70">
+                    <th className="py-3 px-4 w-[24%] text-left">Driver Name & Address</th>
+                    <th className="py-3 px-4 w-[16%] text-left">Verified Contact</th>
+                    <th className="py-3 px-4 w-[18%] text-left">License Number</th>
+                    <th className="py-3 px-4 w-[18%] text-left">Mandatory Dossier</th>
+                    <th className="py-3 px-4 w-[12%] text-left">Duty Status</th>
+                    <th className="py-3 px-4 w-[12%] text-right">Dossier Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-mono text-slate-700 text-xs">
+                  {paginatedDrivers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400 font-sans">
+                        <User className="w-9 h-9 mx-auto mb-2 text-slate-300 stroke-1" />
+                        <div className="font-semibold text-slate-700 text-sm">No Drivers Enrolled in Roster</div>
+                        <div className="text-xs text-slate-400 mt-0.5">Click "+ Enroll Driver & Docs" above to onboard drivers with KYC verification.</div>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedDrivers.map((d) => {
+                    const hasExpiring = d.documents && Object.values(d.documents).some((doc: any) => doc.status === 'expiring_soon');
+                    const dutyStatus = d.duty_status || 'on_duty';
+
+                    return (
+                      <tr key={d.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold font-sans text-slate-900 text-xs flex items-center gap-1.5">
+                            <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-[10px]">
+                              {d.name.slice(0, 1)}
+                            </span>
+                            <span>{d.name}</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-sans ml-7.5">{d.address}</div>
+                        </td>
+                        <td className="p-3 text-indigo-700 font-semibold font-mono text-xs">{d.phone}</td>
+                        <td className="p-3 font-semibold text-slate-800">
+                          <div>{d.license}</div>
+                          <div className="text-[10px] text-slate-400 font-sans">{d.class || 'HMV-Passenger'}</div>
+                        </td>
+                        <td className="p-3 font-sans">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                              hasExpiring
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            }`}
+                          >
+                            {hasExpiring ? (
+                              <>
+                                <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                <span>5/5 (Police Clear Due)</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                <span>5/5 Dossier Approved</span>
+                              </>
+                            )}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 w-[12%] text-left font-sans align-middle">
+                          <div className="relative inline-block group">
+                            <select
+                              value={dutyStatus}
+                              onChange={(e) => handleQuickChangeDriverDuty(d.id, e.target.value)}
+                              title="Click to change Driver Duty Status"
+                              className={`text-xs font-bold rounded-full py-1 pl-2.5 pr-6 appearance-none cursor-pointer border transition shadow-2xs outline-none focus:ring-2 focus:ring-indigo-400 font-sans ${
+                                dutyStatus === 'on_duty'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                                  : dutyStatus === 'available'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+                                  : dutyStatus === 'off_duty'
+                                  ? 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+                                  : 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100'
+                              }`}
+                            >
+                              <option value="on_duty">● ON DUTY</option>
+                              <option value="available">● AVAILABLE</option>
+                              <option value="off_duty">● OFF DUTY</option>
+                              <option value="inactive">● INACTIVE</option>
+                            </select>
+                            <ChevronDown className="w-3 h-3 absolute right-1.5 top-2.5 pointer-events-none text-slate-400 group-hover:text-slate-700" />
+                          </div>
+                        </td>
+                        <td className="p-3 text-right font-sans">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setSelectedDriverForDocs(d)}
+                              className="px-2.5 py-1 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
+                            >
+                              <Award className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>View 5 Docs</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditDriver(d)}
+                              className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Edit Driver</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls for Drivers */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
+              <div>
+                Showing <span className="font-bold text-slate-900">{filteredDrivers.length === 0 ? 0 : (driverCurrentPage - 1) * driverPageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(driverCurrentPage * driverPageSize, filteredDrivers.length)}</span> of <span className="font-bold text-slate-900">{filteredDrivers.length}</span> drivers
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={driverCurrentPage === 1}
+                  onClick={() => setDriverCurrentPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Prev</span>
+                </button>
+                <div className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-mono font-bold text-slate-800">
+                  Page {driverCurrentPage} of {totalDriverPages || 1}
+                </div>
+                <button
+                  type="button"
+                  disabled={driverCurrentPage >= totalDriverPages}
+                  onClick={() => setDriverCurrentPage((p) => Math.min(totalDriverPages, p + 1))}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: ROUTES & STOPS MANAGEMENT */}
+      {/* TAB 3: UNIFIED ROUTES & SCHEDULED TRIPS */}
       {activeTab === 'routes' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-5 shadow-xs">
+          {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="font-bold text-sm text-slate-900">Route Corridors & Versioned Stops (§4 & §10.3)</h2>
-              <p className="text-[11px] text-slate-500">Routes are versioned so modifying stops never alters historical trip logs.</p>
+              <h2 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-indigo-600" />
+                <span>Corporate Routes & Scheduled Trips Register</span>
+                <span className="text-[10px] bg-indigo-50 text-indigo-700 font-mono font-bold px-2 py-0.5 rounded border border-indigo-200">
+                  {trips.length} SCHEDULED TRIPS • {routes.length} CORRIDORS
+                </span>
+              </h2>
+              <p className="text-[11px] text-slate-500">
+                Unified travel management: route corridors, versioned stops, corporate passenger manifests, assigned EV cars, and driver dispatch schedules.
+              </p>
             </div>
-            <button
-              onClick={() => setShowAddRouteModal(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Create Route Corridor</span>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => {
+                  setSelectedTripForEdit(null);
+                  setShowDispatchTripModalInFleet(true);
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Schedule New Trip</span>
+              </button>
+              <button
+                onClick={() => setShowAddRouteModal(true)}
+                className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-2xs transition cursor-pointer shrink-0"
+              >
+                <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+                <span>+ Design Route Plan</span>
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {routes.map((r: any) => (
-              <div key={r.id || r.code} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 shadow-2xs hover:border-indigo-300 transition">
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono font-bold rounded-xl text-xs">
-                      {r.code}
-                    </span>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm">{r.name}</h3>
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
-                        <span>{r.stops?.length || 0} Stopping Points</span>
-                        {r.estimated_duration_min && (
-                          <span>• ~{r.estimated_duration_min} min est.</span>
+          {/* Unified Cards List */}
+          <div className="space-y-4">
+            {trips.length === 0 ? (
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-12 text-center text-slate-400 shadow-2xs">
+                <MapPin className="w-10 h-10 mx-auto mb-3 text-slate-300 stroke-1" />
+                <div className="font-bold text-slate-700 text-sm">No Scheduled Trips in Register</div>
+                <div className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                  Plan custom corridors with map routing or select tour packages, then assign available cars and drivers to dispatch journeys.
+                </div>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => setShowDispatchTripModalInFleet(true)}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Schedule First Trip
+                  </button>
+                </div>
+              </div>
+            ) : (
+              trips.map((t: any) => {
+              // Find matching route if any
+              const matchedRoute = routes.find(
+                (r: any) => r.id === t.route_id || r.code === t.route_code
+              );
+
+              const startDate = t.planned_start ? new Date(t.planned_start) : new Date();
+              const endDate = t.planned_end ? new Date(t.planned_end) : new Date(Date.now() + 3600000);
+
+              const dateFormatted = startDate.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              });
+              const startTimeFormatted = startDate.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+              const endTimeFormatted = endDate.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+
+              const isLive = t.status === 'in_progress';
+              const stopsList = matchedRoute?.stops || ['Swargate Metro Hub', 'Chandani Chowk', 'Hinjawadi Phase 3'];
+              const tripPassengers: { name: string; phone: string }[] = t.passengers || [];
+
+              return (
+                <div
+                  key={t.id}
+                  className="p-4 sm:p-5 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition shadow-2xs space-y-3.5"
+                >
+                  {/* Card Header: Route code, Title, Status, Distance, Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-200/80 pb-3">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono font-bold rounded-xl text-xs">
+                        {t.route_code || matchedRoute?.code || 'CR-CORRIDOR'}
+                      </span>
+                      <h3 className="font-bold text-slate-900 text-sm truncate">
+                        {t.route_name || matchedRoute?.name || 'Corporate Transit Corridor'}
+                      </h3>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                          isLive
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse'
+                            : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                        }`}
+                      >
+                        {isLive ? '● Live In Transit' : 'Scheduled'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <span className="text-xs sm:text-sm font-mono font-bold text-indigo-600 block">
+                          {matchedRoute?.distance_km || ((t.distance_m || 24000) / 1000).toFixed(1)} km
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">Corridor Distance</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTripForDetails(t)}
+                          className="px-2.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                          title="View Full Trip Dossier, Stops Sequence & Passenger Manifest"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Trip Details</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTripForEdit(t);
+                            setShowDispatchTripModalInFleet(true);
+                          }}
+                          className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold rounded-xl text-xs flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                          title="Edit Scheduled Timings, Vehicle, Driver & Passengers"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Edit</span>
+                        </button>
+
+                        {matchedRoute && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditRoute(matchedRoute)}
+                            className="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                            title="Edit Route Corridor & Stops"
+                          >
+                            <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                            <span className="hidden md:inline">Stops</span>
+                          </button>
                         )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (matchedRoute) {
+                              handleDeleteRoute(matchedRoute.id, matchedRoute.code);
+                            }
+                            handleDeleteTrip(t.id);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                          title="Delete Route & Trip"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs sm:text-sm font-mono font-bold text-indigo-600 block">{r.distance_km} km</span>
-                    <span className="text-[10px] text-slate-400 font-medium">Corridor Distance</span>
-                  </div>
-                </div>
 
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1.5 flex items-center justify-between">
-                    <span>Ordered Stopping Points Sequence</span>
-                    <span className="text-[10px] text-indigo-600 font-mono font-semibold">1 ➔ {r.stops?.length || 0}</span>
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(r.stops || []).map((stop: string | any, sIdx: number) => {
-                      const stopName = typeof stop === 'string' ? stop : stop.name;
-                      const isFirst = sIdx === 0;
-                      const isLast = sIdx === (r.stops.length - 1);
-                      return (
-                        <span
-                          key={sIdx}
-                          className={`px-2 py-1 rounded-lg border text-[10px] font-semibold shadow-2xs flex items-center gap-1.5 ${isFirst
-                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                              : isLast
+                  {/* Stops Sequence Badges */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-indigo-500" />
+                        <span>Ordered Stopping Points (Click badge to rename stop)</span>
+                      </span>
+                      <span className="text-[10px] text-indigo-600 font-mono font-semibold">
+                        1 ➔ {stopsList.length}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {stopsList.map((stop: string | any, sIdx: number) => {
+                        const stopName = typeof stop === 'string' ? stop : stop.name;
+                        const isFirst = sIdx === 0;
+                        const isLast = sIdx === stopsList.length - 1;
+                        return (
+                          <span
+                            key={sIdx}
+                            onClick={() => {
+                              if (matchedRoute) {
+                                const newName = window.prompt(`Rename stop #${sIdx + 1}:`, stopName);
+                                if (newName && newName.trim()) {
+                                  handleQuickRenameStop(matchedRoute.id || matchedRoute.code, sIdx, newName.trim());
+                                }
+                              }
+                            }}
+                            className={`px-2 py-1 rounded-lg border text-[10px] font-semibold shadow-2xs flex items-center gap-1.5 cursor-pointer hover:ring-2 hover:ring-indigo-300 transition ${
+                              isFirst
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                : isLast
                                 ? 'bg-rose-50 border-rose-200 text-rose-800'
                                 : 'bg-white border-slate-200 text-slate-700'
                             }`}
-                        >
-                          <span
-                            className={`w-3.5 h-3.5 rounded-full text-[9px] flex items-center justify-center font-bold text-white ${isFirst ? 'bg-emerald-600' : isLast ? 'bg-rose-600' : 'bg-indigo-600'
-                              }`}
+                            title="Click to rename stop"
                           >
-                            {sIdx + 1}
+                            <span
+                              className={`w-3.5 h-3.5 rounded-full text-[9px] flex items-center justify-center font-bold text-white shrink-0 ${
+                                isFirst ? 'bg-emerald-600' : isLast ? 'bg-rose-600' : 'bg-indigo-600'
+                              }`}
+                            >
+                              {sIdx + 1}
+                            </span>
+                            <span className="truncate max-w-[200px]">{stopName}</span>
+                            <Edit3 className="w-2.5 h-2.5 opacity-40 hover:opacity-100 shrink-0" />
                           </span>
-                          <span>{stopName}</span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3-Column Resource Allocation & Passenger Manifest */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                    {/* 1. Date & Time */}
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1 flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-indigo-500" /> Scheduled Date & Time
+                      </span>
+                      <div className="font-bold text-slate-900 text-xs">
+                        {dateFormatted}
+                      </div>
+                      <div className="text-[11px] font-mono text-indigo-600 font-semibold mt-0.5 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span>{startTimeFormatted} ➔ {endTimeFormatted}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">{t.shift || 'General Shift'}</span>
+                    </div>
+
+                    {/* 2. Assigned EV Car & Driver */}
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1 flex items-center gap-1">
+                        <Car className="w-3 h-3 text-emerald-500" /> Assigned Car & Driver
+                      </span>
+                      <div className="font-mono font-bold text-slate-900 text-xs flex items-center justify-between">
+                        <span>{t.bus_reg || 'Unassigned Car'}</span>
+                        <span className="text-[10px] font-sans font-normal text-slate-500 truncate">{t.bus_model || '-'}</span>
+                      </div>
+                      <div className="font-bold text-slate-800 text-[11px] mt-1 flex items-center gap-1">
+                        <User className="w-3 h-3 text-amber-500" />
+                        <span>{t.driver_name || 'Unassigned Driver'}</span>
+                        <span className="font-mono text-[10px] text-slate-400 font-normal">({t.driver_phone || '-'})</span>
+                      </div>
+                    </div>
+
+                    {/* 3. Passenger Manifest */}
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                          <Users className="w-3 h-3 text-cyan-500" /> Corporate Passengers
                         </span>
-                      );
-                    })}
+                        <span className="text-[10px] font-bold bg-cyan-50 text-cyan-700 px-1.5 py-0.5 rounded border border-cyan-200">
+                          {tripPassengers.length} Riders
+                        </span>
+                      </div>
+
+                      {tripPassengers.length > 0 ? (
+                        <div className="space-y-1 max-h-16 overflow-y-auto">
+                          {tripPassengers.map((p, pIdx) => (
+                            <div key={pIdx} className="text-[11px] flex items-center justify-between text-slate-800 bg-slate-50 px-2 py-0.5 rounded">
+                              <span className="font-semibold truncate">{p.name}</span>
+                              <span className="font-mono text-[10px] text-slate-500 shrink-0">{p.phone}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-[11px] text-slate-400 italic py-1">
+                          No specific riders linked yet.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            }))}
           </div>
         </div>
+      )}
+
+      {/* MODAL 5B: EDIT ROUTE CORRIDOR & STOPS MODAL */}
+      {editingRoute && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[92dvh] overflow-y-auto shadow-2xl p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-600">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                    <span>Edit Route Corridor & Stops</span>
+                    <span className="font-mono text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                      {editingRouteCode}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Update route title, code, distance, duration, and rename individual stopping locations
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingRoute(null)}
+                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditRoute} className="space-y-4 text-xs">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Route Code</label>
+                  <input
+                    type="text"
+                    value={editingRouteCode}
+                    onChange={(e) => setEditingRouteCode(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono font-bold uppercase focus:outline-none focus:border-indigo-600"
+                    required
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Corridor Title / Name</label>
+                  <input
+                    type="text"
+                    value={editingRouteName}
+                    onChange={(e) => setEditingRouteName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-600"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Distance (km)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editingRouteDistance}
+                    onChange={(e) => setEditingRouteDistance(Number(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-indigo-600"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Est. Duration (minutes)</label>
+                  <input
+                    type="number"
+                    value={editingRouteDuration}
+                    onChange={(e) => setEditingRouteDuration(Number(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-indigo-600"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Ordered Stops List */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Ordered Stops Sequence (Origin ➔ Passenger Stops ➔ Destination)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setEditingRouteStops([...editingRouteStops, `New Stop ${editingRouteStops.length + 1}`])}
+                    className="text-[11px] text-indigo-600 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" /> Add Stop
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {editingRouteStops.map((stop, sIdx) => {
+                    const isFirst = sIdx === 0;
+                    const isLast = sIdx === editingRouteStops.length - 1;
+                    return (
+                      <div
+                        key={sIdx}
+                        className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2"
+                      >
+                        <span
+                          className={`w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 ${
+                            isFirst ? 'bg-emerald-600' : isLast ? 'bg-rose-600' : 'bg-indigo-600'
+                          }`}
+                        >
+                          {isFirst ? 'A' : isLast ? 'B' : sIdx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={stop}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEditingRouteStops((prev) => prev.map((s, idx) => (idx === sIdx ? val : s)));
+                          }}
+                          placeholder={`Stop #${sIdx + 1} Name`}
+                          className="flex-1 bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold focus:outline-none focus:border-indigo-600"
+                          required
+                        />
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={sIdx === 0}
+                            onClick={() => {
+                              const copy = [...editingRouteStops];
+                              const temp = copy[sIdx - 1]!;
+                              copy[sIdx - 1] = copy[sIdx]!;
+                              copy[sIdx] = temp;
+                              setEditingRouteStops(copy);
+                            }}
+                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-20 cursor-pointer"
+                            title="Move earlier"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            disabled={sIdx === editingRouteStops.length - 1}
+                            onClick={() => {
+                              const copy = [...editingRouteStops];
+                              const temp = copy[sIdx + 1]!;
+                              copy[sIdx + 1] = copy[sIdx]!;
+                              copy[sIdx] = temp;
+                              setEditingRouteStops(copy);
+                            }}
+                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-20 cursor-pointer"
+                            title="Move later"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            disabled={editingRouteStops.length <= 2}
+                            onClick={() => setEditingRouteStops(editingRouteStops.filter((_, idx) => idx !== sIdx))}
+                            className="p-1 text-slate-400 hover:text-rose-600 disabled:opacity-20 cursor-pointer"
+                            title="Remove stop"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingRoute(null)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-xs transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow-xs"
+                >
+                  Save Route Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* DISPATCH / SCHEDULE TRIP MODAL IN FLEET VIEW */}
+      {showDispatchTripModalInFleet && (
+        <DispatchTripModal
+          initialTrip={selectedTripForEdit}
+          existingRoutes={routes}
+          onRouteCreated={handleSaveNewRoute}
+          availableCars={buses}
+          availableDrivers={drivers}
+          onClose={() => {
+            setShowDispatchTripModalInFleet(false);
+            setSelectedTripForEdit(null);
+          }}
+          onTripDispatched={(updated) => {
+            handleTripUpdated(updated);
+            setShowDispatchTripModalInFleet(false);
+            setSelectedTripForEdit(null);
+          }}
+        />
       )}
 
       {/* MODAL 1: MANDATORY VEHICLE DOCUMENTS VAULT */}
@@ -2559,14 +3547,20 @@ export const FleetManagementView: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] text-slate-700 block mb-1 font-semibold">Fleet Operating Status</label>
+                  <label className="text-[11px] text-slate-700 block mb-1 font-semibold">Fleet Operating Status *</label>
                   <select
-                    value={editIsActive ? 'active' : 'inactive'}
-                    onChange={(e) => setEditIsActive(e.target.value === 'active')}
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 font-medium"
+                    value={editCarStatus}
+                    onChange={(e) => {
+                      const val = e.target.value as 'active' | 'on_trip' | 'maintenance' | 'inactive';
+                      setEditCarStatus(val);
+                      setEditIsActive(val === 'active' || val === 'on_trip');
+                    }}
+                    className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 font-bold focus:outline-none focus:border-indigo-600"
                   >
-                    <option value="active">Active In Fleet (Operational)</option>
-                    <option value="inactive">Inactive / Depot Maintenance</option>
+                    <option value="active">Active in Fleet (Ready for Dispatch)</option>
+                    <option value="on_trip">On Active Trip (Live Transit)</option>
+                    <option value="maintenance">In Maintenance (RTO / Workshop)</option>
+                    <option value="inactive">Inactive / Standby</option>
                   </select>
                 </div>
               </div>
@@ -3487,11 +4481,12 @@ export const FleetManagementView: React.FC = () => {
                 <select
                   value={editDriverDutyStatus}
                   onChange={(e) => setEditDriverDutyStatus(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-indigo-600"
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-900 font-bold focus:outline-none focus:border-indigo-600"
                 >
-                  <option value="on_duty">ON DUTY (Available For Dispatch)</option>
-                  <option value="off_duty">OFF DUTY (Rest / Leave)</option>
-                  <option value="on_trip">ON TRIP (Currently Driving)</option>
+                  <option value="on_duty">ON DUTY (Active Assigned Shift)</option>
+                  <option value="available">AVAILABLE (Standby for Immediate Dispatch)</option>
+                  <option value="off_duty">OFF DUTY (Shift Complete / Resting)</option>
+                  <option value="inactive">INACTIVE (On Leave / Suspended)</option>
                 </select>
               </div>
 
@@ -3739,8 +4734,267 @@ export const FleetManagementView: React.FC = () => {
         isOpen={showAddRouteModal}
         onClose={() => setShowAddRouteModal(false)}
         onSaveRoute={handleSaveNewRoute}
+        onSaveRouteAndTrip={handleSaveNewRouteAndTrip}
         existingRoutesCount={routes.length}
+        availableCars={buses}
+        availableDrivers={drivers}
       />
+
+      {/* MODAL: TRIP DOSSIER & OPERATIONAL DETAILS */}
+      {selectedTripForDetails && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl max-h-[92dvh] overflow-y-auto shadow-2xl p-5 sm:p-7 space-y-5 animate-in fade-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono font-bold rounded-xl text-xs">
+                    {selectedTripForDetails.route_code || 'CR-CORRIDOR'}
+                  </span>
+                  <h3 className="font-extrabold text-slate-900 text-base sm:text-lg">
+                    {selectedTripForDetails.route_name || 'Corporate Transit Corridor'}
+                  </h3>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                      selectedTripForDetails.status === 'in_progress'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse'
+                        : selectedTripForDetails.status === 'completed'
+                        ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                        : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                    }`}
+                  >
+                    {selectedTripForDetails.status === 'in_progress'
+                      ? '● Live In Transit'
+                      : selectedTripForDetails.status === 'completed'
+                      ? 'Completed'
+                      : 'Scheduled Dispatch'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-mono mt-1">
+                  Trip Reference ID: <span className="text-slate-700 font-semibold">{selectedTripForDetails.id}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedTripForDetails(null)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Actions Row */}
+            <div className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex-wrap">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-bold text-slate-700">Operational Status:</span>
+                <span className="font-semibold text-slate-600 capitalize">{selectedTripForDetails.status || 'scheduled'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedTripForDetails.status !== 'in_progress' && selectedTripForDetails.status !== 'completed' && (
+                  <button
+                    onClick={() => {
+                      handleUpdateTripStatus(selectedTripForDetails.id, 'in_progress');
+                    }}
+                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Start Live Trip Now</span>
+                  </button>
+                )}
+                {selectedTripForDetails.status === 'in_progress' && (
+                  <button
+                    onClick={() => {
+                      handleUpdateTripStatus(selectedTripForDetails.id, 'completed');
+                    }}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Mark Trip Completed</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setSelectedTripForEdit(selectedTripForDetails);
+                    setShowDispatchTripModalInFleet(true);
+                    setSelectedTripForDetails(null);
+                  }}
+                  className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Edit Schedule & Manifest</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Overview Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              {/* Card 1: Timings & Shift */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
+                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Scheduled Timings</span>
+                </div>
+                <div className="font-extrabold text-slate-900 text-sm">
+                  {new Date(selectedTripForDetails.planned_start || Date.now()).toLocaleDateString('en-IN', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </div>
+                <div className="text-xs font-mono font-bold text-indigo-600 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>
+                    {new Date(selectedTripForDetails.planned_start || Date.now()).toLocaleTimeString('en-IN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {' ➔ '}
+                    {new Date(selectedTripForDetails.planned_end || Date.now() + 3600000).toLocaleTimeString('en-IN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  Shift: <span className="font-bold text-slate-700">{selectedTripForDetails.shift || 'General Shift'}</span>
+                </div>
+              </div>
+
+              {/* Card 2: Assigned Vehicle */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
+                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+                  <Car className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Assigned EV Vehicle</span>
+                </div>
+                <div className="font-mono font-bold text-slate-900 text-sm">
+                  {selectedTripForDetails.bus_reg || 'Unassigned Car'}
+                </div>
+                <div className="text-xs text-slate-600 font-medium">
+                  {selectedTripForDetails.bus_model || '-'}
+                </div>
+                <div className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>6/6 Mandatory Docs Verified</span>
+                </div>
+              </div>
+
+              {/* Card 3: Assigned Driver */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
+                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Assigned Professional Driver</span>
+                </div>
+                <div className="font-bold text-slate-900 text-sm">
+                  {selectedTripForDetails.driver_name || 'Unassigned Driver'}
+                </div>
+                <div className="text-xs font-mono text-indigo-700 font-semibold flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-slate-400" />
+                  <span>{selectedTripForDetails.driver_phone || '+91 98220 01122'}</span>
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  DL: <span className="font-mono text-slate-700">HMV-Commercial Cleared</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Stops Corridor Sequence */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-indigo-600" />
+                  <span>Route Corridor Stops Sequence</span>
+                </h4>
+                <span className="text-xs font-mono font-bold text-indigo-600">
+                  {((selectedTripForDetails.distance_m || 24500) / 1000).toFixed(1)} km total corridor
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {(routes.find((r: any) => r.id === selectedTripForDetails.route_id || r.code === selectedTripForDetails.route_code)?.stops || [
+                  'Swargate Metro Hub',
+                  'Chandani Chowk Bypass',
+                  'Hinjawadi Phase 3 TechZone',
+                ]).map((stop: any, sIdx: number, arr: any[]) => {
+                  const stopName = typeof stop === 'string' ? stop : stop.name;
+                  const isFirst = sIdx === 0;
+                  const isLast = sIdx === arr.length - 1;
+                  return (
+                    <div
+                      key={sIdx}
+                      className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5"
+                    >
+                      <span
+                        className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold text-white shrink-0 ${
+                          isFirst ? 'bg-emerald-600' : isLast ? 'bg-rose-600' : 'bg-indigo-600'
+                        }`}
+                      >
+                        {sIdx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-800 truncate">{stopName}</div>
+                        <div className="text-[10px] text-slate-400">
+                          {isFirst ? 'Origin Terminal' : isLast ? 'Final Destination' : `Waypoint #${sIdx + 1}`}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Corporate Passenger Manifest */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-cyan-600" />
+                  <span>Corporate Passenger Manifest</span>
+                  <span className="text-[10px] font-bold bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full">
+                    {(selectedTripForDetails.passengers || []).length} Booked Riders
+                  </span>
+                </h4>
+              </div>
+
+              {(selectedTripForDetails.passengers || []).length > 0 ? (
+                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                  {(selectedTripForDetails.passengers || []).map((p: any, idx: number) => (
+                    <div key={idx} className="p-3 flex items-center justify-between text-xs hover:bg-slate-50 transition">
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px]">
+                          {idx + 1}
+                        </span>
+                        <div>
+                          <div className="font-bold text-slate-900">{p.name}</div>
+                          <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-slate-400" />
+                            <span>{p.phone || '+91 98000 00000'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold">
+                        Confirmed Seat
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white p-4 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
+                  No passengers assigned to this trip yet. Click "Edit Schedule & Manifest" above to add corporate riders.
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setSelectedTripForDetails(null)}
+                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Close Inspector
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* HIGH-FIDELITY DOCUMENT VIEWER & SCANNED COPY PREVIEW LIGHTBOX */}
       {previewDoc && (

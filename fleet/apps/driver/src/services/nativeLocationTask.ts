@@ -151,8 +151,8 @@ export async function startNativeTracking(
       activityType: Location.ActivityType.AutomotiveNavigation,
       showsBackgroundLocationIndicator: true,
       foregroundService: {
-        notificationTitle: 'FleetCommand — Live Bus Tracking Active',
-        notificationBody: 'Sharing location telemetry with depot control room.',
+        notificationTitle: 'FleetCommand — Live Vehicle Tracking Active',
+        notificationBody: 'Sharing corporate car telemetry with operations control room.',
         killServiceOnDestroy: false,
       },
     });

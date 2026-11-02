@@ -44,7 +44,14 @@ export default function DriverApp() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('login');
 
   // Network & Server Configuration
-  const [serverUrl, setServerUrl] = useState('http://10.87.133.77:3000');
+  const [serverUrl, setServerUrlState] = useState(() => {
+    return driverUploader.getKV('server_url') || 'https://traveltracking.onrender.com';
+  });
+
+  const setServerUrl = (url: string) => {
+    setServerUrlState(url);
+    driverUploader.setKV('server_url', url);
+  };
   const [driverPhone, setDriverPhone] = useState('9822001122');
   const [driverPin, setDriverPin] = useState('123456');
   const [authToken, setAuthToken] = useState('demo-driver-token');
@@ -335,7 +342,7 @@ Time: ${new Date().toISOString()}`;
               onChangeText={setServerUrl}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="http://192.168.1.X:3000"
+              placeholder="https://traveltracking.onrender.com"
               placeholderTextColor="#64748b"
             />
 

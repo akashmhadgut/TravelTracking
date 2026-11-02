@@ -6,17 +6,30 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#020617"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5b589262-aeb6-469a-9a4e-ea6081cd1564",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "in.deccantransit.fleetcommand.driver",
       "infoPlist": {
-        "UIBackgroundModes": ["location", "fetch"],
-        "NSLocationWhenInUseUsageDescription": "Location is shared with dispatch only while an assigned bus trip is active.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Continuous background location is required during an active bus trip to share real-time progress with dispatch even when the screen is locked."
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ],
+        "NSLocationWhenInUseUsageDescription": "Location is shared with dispatch only while an assigned vehicle trip is active.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Continuous background location is required during an active vehicle trip to share real-time progress with dispatch even when the screen is locked."
       }
     },
     "android": {
@@ -28,18 +41,29 @@
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
-        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "plugins": [
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Location is shared with dispatch only while your assigned bus trip is active.",
+          "locationAlwaysAndWhenInUsePermission": "Location is shared with dispatch only while your assigned vehicle trip is active.",
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }
-      ]
-    ]
+      ],
+      "expo-updates"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5b589262-aeb6-469a-9a4e-ea6081cd1564"
+      }
+    }
   }
 }

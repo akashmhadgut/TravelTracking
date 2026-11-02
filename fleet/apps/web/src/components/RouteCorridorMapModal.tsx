@@ -46,7 +46,14 @@ interface RouteCorridorMapModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveRoute: (route: RouteCorridorData) => Promise<void> | void;
+  onSaveRouteAndTrip?: (route: RouteCorridorData, tripData: any) => Promise<void> | void;
   existingRoutesCount?: number;
+  availableCars?: any[];
+  availableDrivers?: any[];
+  title?: string;
+  subtitle?: string;
+  submitButtonText?: string;
+  initialRoute?: RouteCorridorData | any | null;
 }
 
 // Curated 50+ Pune Tech Hubs, Corporate Centers, Metro Stations, and Junctions
@@ -74,6 +81,14 @@ const PUNE_HUBS: PuneLocationItem[] = [
   { name: 'Senapati Bapat Road - ICC Trade Tower', category: 'Corporate Hub', lat: 18.5322, lng: 73.8341, keywords: 'sb road senapati bapat icc trade tower marriott central' },
   { name: 'Hadapsar - SP Infocity IT SEZ', category: 'IT SEZ / Tech Park', lat: 18.4902, lng: 73.9568, keywords: 'hadapsar sp infocity sez saswad road ibm accenture' },
   { name: 'Balewadi High Street - Cummins India Campus', category: 'Corporate Hub', lat: 18.5758, lng: 73.7745, keywords: 'balewadi high street cummins baner expressway corporate' },
+
+  // Pune Darshan & Sightseeing Tourist Landmarks (User Core Feature)
+  { name: 'Shaniwar Wada Palace (Historic Peshwa Fort)', category: 'Sightseeing Landmark', lat: 18.5196, lng: 73.8553, keywords: 'pune darshan shaniwar wada bajirao mastani historic fort heritage' },
+  { name: 'Shrimant Dagdusheth Halwai Ganpati Temple', category: 'Pilgrimage Landmark', lat: 18.5165, lng: 73.8561, keywords: 'pune darshan dagdusheth ganpati temple budhwar peth' },
+  { name: 'Aga Khan Palace & Gandhi Memorial', category: 'Historic National Monument', lat: 18.5524, lng: 73.9015, keywords: 'pune darshan aga khan palace gandhi national monument kalyani nagar' },
+  { name: 'Sinhagad Fort & Valley Viewpoint', category: 'Historic Hill Fortress', lat: 18.3664, lng: 73.7558, keywords: 'pune darshan sinhagad fort tanaji malusare hill view' },
+  { name: 'Sarasbaug & Peshwe Park (Talyatla Ganpati)', category: 'Heritage Temple & Garden', lat: 18.5008, lng: 73.8532, keywords: 'pune darshan saras baug peshwe park talyatla ganpati lake' },
+  { name: 'Pataleshwar Cave Temple (8th Century Rock Cut)', category: 'Archaeological Monument', lat: 18.5284, lng: 73.8509, keywords: 'pune darshan pataleshwar cave jm road shivajinagar' },
 
   // Transit Hubs, Airport & Railway Stations
   { name: 'Pune International Airport (PNQ Terminal 1 & 2)', category: 'Airport Terminal', lat: 18.5822, lng: 73.9197, keywords: 'pune airport international terminal lohegaon flight airlines departure arrival' },
@@ -107,7 +122,20 @@ const PUNE_HUBS: PuneLocationItem[] = [
 // Curated Corporate Presets
 const PRESET_CORRIDORS = [
   {
-    label: 'Swargate ➔ Hinjawadi IT Corridor',
+    label: '⭐ Pune Darshan Full Day Tour Plan',
+    code: 'PD-001',
+    name: 'Pune Darshan City Tour: Shaniwar Wada, Dagdusheth, Aga Khan Palace & Sinhagad',
+    start: { name: 'Pune Central Railway Station (Main Concourse)', lat: 18.5289, lng: 73.8744 },
+    end: { name: 'Sarasbaug & Peshwe Park (Talyatla Ganpati)', lat: 18.5008, lng: 73.8532 },
+    stops: [
+      { name: 'Shaniwar Wada Palace (Historic Peshwa Fort)', lat: 18.5196, lng: 73.8553 },
+      { name: 'Shrimant Dagdusheth Halwai Ganpati Temple', lat: 18.5165, lng: 73.8561 },
+      { name: 'Aga Khan Palace & Gandhi Memorial', lat: 18.5524, lng: 73.9015 },
+      { name: 'Sinhagad Fort & Valley Viewpoint', lat: 18.3664, lng: 73.7558 },
+    ],
+  },
+  {
+    label: 'Swargate Γ₧ö Hinjawadi IT Corridor',
     code: 'CR-401',
     name: 'Swargate Hub to Hinjawadi Phase 3 TechZone',
     start: { name: 'Swargate Metro Station & Central Hub', lat: 18.5018, lng: 73.8586 },
@@ -120,7 +148,7 @@ const PRESET_CORRIDORS = [
     ],
   },
   {
-    label: 'Airport ➔ Magarpatta Cyber City',
+    label: 'Airport Γ₧ö Magarpatta Cyber City',
     code: 'CR-205',
     name: 'Pune Airport to Magarpatta Cyber City Tech Hub',
     start: { name: 'Pune International Airport (PNQ Terminal 1 & 2)', lat: 18.5822, lng: 73.9197 },
@@ -132,7 +160,7 @@ const PRESET_CORRIDORS = [
     ],
   },
   {
-    label: 'Kothrud ➔ Kharadi EON IT Park',
+    label: 'Kothrud Γ₧ö Kharadi EON IT Park',
     code: 'CR-308',
     name: 'Kothrud Vanaz to Kharadi EON Free Zone IT Park',
     start: { name: 'Kothrud - Vanaz Metro Station & Hub', lat: 18.5042, lng: 73.8078 },
@@ -144,7 +172,7 @@ const PRESET_CORRIDORS = [
     ],
   },
   {
-    label: 'Katraj ➔ Baner Balewadi Corporate Hub',
+    label: 'Katraj Γ₧ö Baner Balewadi Corporate Hub',
     code: 'CR-512',
     name: 'Katraj Wonder City to Balewadi High Street',
     start: { name: 'Katraj - Wonder City & Snake Park Hub', lat: 18.4575, lng: 73.8677 },
@@ -161,7 +189,12 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
   isOpen,
   onClose,
   onSaveRoute,
+  onSaveRouteAndTrip,
   existingRoutesCount = 0,
+  title,
+  subtitle,
+  submitButtonText,
+  initialRoute,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -208,29 +241,63 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
   const [showNewStopDropdown, setShowNewStopDropdown] = useState(false);
   const [newStopSearchResults, setNewStopSearchResults] = useState<PuneLocationItem[]>([]);
 
-  // Reset form cleanly when modal opens
+  // Reset or initialize form cleanly when modal opens
   useEffect(() => {
     if (isOpen) {
-      setRouteCode(`CR-${existingRoutesCount + 501}`);
-      setRouteName('');
-      setStartPoint(null);
-      setEndPoint(null);
-      setIntermediateStops([]);
-      setStartSearchText('');
-      setEndSearchText('');
-      setNewStopSearchText('');
-      setTotalDistanceKm(0);
-      setEstimatedDurationMin(0);
-      setAvgSpeedKmh(0);
-      setRouteGeometry(null);
-      setSelectedMapSearchItem(null);
-      setMapSearchQuery('');
-      if (searchPinMarkerRef.current) {
-        searchPinMarkerRef.current.remove();
-        searchPinMarkerRef.current = null;
+      if (initialRoute) {
+        setRouteCode(initialRoute.code || `CR-${existingRoutesCount + 501}`);
+        setRouteName(initialRoute.name || '');
+        if (initialRoute.detailed_stops && initialRoute.detailed_stops.length > 0) {
+          const detailed = initialRoute.detailed_stops;
+          setStartPoint(detailed[0] || null);
+          setEndPoint(detailed.length > 1 ? detailed[detailed.length - 1] : null);
+          setIntermediateStops(detailed.slice(1, detailed.length - 1));
+        } else if (initialRoute.stops && initialRoute.stops.length > 0) {
+          const matched = initialRoute.stops.map((name: string, idx: number) => {
+            const hub = PUNE_HUBS.find(
+              (h) =>
+                h.name.toLowerCase().includes(name.toLowerCase()) ||
+                name.toLowerCase().includes(h.name.toLowerCase())
+            );
+            return {
+              id: `stop-${idx}`,
+              sequence: idx + 1,
+              name: name,
+              lat: hub?.lat || 18.5204 + idx * 0.02,
+              lng: hub?.lng || 73.8567 + idx * 0.02,
+              planned_offset_min: idx * 15,
+              radius_m: 50,
+            };
+          });
+          setStartPoint(matched[0] || null);
+          setEndPoint(matched.length > 1 ? matched[matched.length - 1] : null);
+          setIntermediateStops(matched.slice(1, matched.length - 1));
+        }
+        setTotalDistanceKm(initialRoute.distance_km || 0);
+        setEstimatedDurationMin(initialRoute.estimated_duration_min || 0);
+        setRouteGeometry(initialRoute.geometry || null);
+      } else {
+        setRouteCode(`CR-${existingRoutesCount + 501}`);
+        setRouteName('');
+        setStartPoint(null);
+        setEndPoint(null);
+        setIntermediateStops([]);
+        setStartSearchText('');
+        setEndSearchText('');
+        setNewStopSearchText('');
+        setTotalDistanceKm(0);
+        setEstimatedDurationMin(0);
+        setAvgSpeedKmh(0);
+        setRouteGeometry(null);
+        setSelectedMapSearchItem(null);
+        setMapSearchQuery('');
+        if (searchPinMarkerRef.current) {
+          searchPinMarkerRef.current.remove();
+          searchPinMarkerRef.current = null;
+        }
       }
     }
-  }, [isOpen, existingRoutesCount]);
+  }, [isOpen, existingRoutesCount, initialRoute]);
 
   // Search filtering function: matches catalog + optional online geocoding
   const filterLocations = useCallback((query: string): PuneLocationItem[] => {
@@ -446,7 +513,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
       el.className = 'flex flex-col items-center animate-bounce';
       el.innerHTML = `
         <div class="px-2.5 py-1 bg-indigo-900 text-white font-extrabold text-[11px] rounded-lg shadow-xl border border-indigo-400 whitespace-nowrap mb-1">
-          📍 ${hub.name}
+          ≡ƒôì ${hub.name}
         </div>
         <div class="w-5 h-5 rounded-full bg-indigo-600 border-2 border-white ring-4 ring-indigo-300 shadow-xl"></div>
       `;
@@ -725,7 +792,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
       const lng = Number(e.lngLat.lng.toFixed(5));
 
       // Find closest known Pune hub or use coordinates
-      let matchedName = `Pinned Location (${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E)`;
+      let matchedName = `Pinned Location (${lat.toFixed(4)}┬░N, ${lng.toFixed(4)}┬░E)`;
       let minDistance = Infinity;
       for (const h of PUNE_HUBS) {
         const d = Math.hypot(h.lat - lat, h.lng - lng);
@@ -869,8 +936,8 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
   }, [startPoint, intermediateStops, endPoint]);
 
   // Submit Handler
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!startPoint || !endPoint) {
       alert('Please set both a Start Point (Origin A) and an End Point (Destination B).');
       return;
@@ -902,12 +969,48 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
     }
   };
 
+  const handleSaveAndDispatch = async () => {
+    if (!startPoint || !endPoint) {
+      alert('Please set both a Start Point (Origin A) and an End Point (Destination B).');
+      return;
+    }
+    if (!routeCode || !routeName) {
+      alert('Please provide a Route Code and Route Name.');
+      return;
+    }
+
+    const allStops = getAllStops();
+    setIsSubmitting(true);
+    try {
+      const finalRouteData: RouteCorridorData = {
+        code: routeCode.toUpperCase().trim(),
+        name: routeName.trim(),
+        distance_km: totalDistanceKm,
+        estimated_duration_min: estimatedDurationMin,
+        stops: allStops.map((s) => s.name),
+        detailed_stops: allStops,
+        geometry: routeGeometry,
+      };
+
+      if (onSaveRouteAndTrip) {
+        await onSaveRouteAndTrip(finalRouteData, { shift: 'General Shift' });
+      } else {
+        await onSaveRoute(finalRouteData);
+      }
+      onClose();
+    } catch (err: any) {
+      alert(`Error saving route & dispatching: ${err.message || 'Server error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const totalStopCount = (startPoint ? 1 : 0) + intermediateStops.length + (endPoint ? 1 : 0);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200 font-sans">
+    <div className="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200 font-sans">
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-7xl h-[94dvh] flex flex-col overflow-hidden">
         {/* HEADER */}
         <div className="p-4 sm:p-5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
@@ -918,14 +1021,14 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-extrabold text-sm sm:text-base text-white tracking-tight">
-                  Corporate Cab Route Corridor Studio
+                  {title || 'Design Route Plan'}
                 </h2>
                 <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 rounded-full text-[10px] font-bold">
                   Start ➔ Passenger Stops ➔ Destination
                 </span>
               </div>
               <p className="text-slate-400 text-[11px] hidden sm:block">
-                Search pickup addresses, intermediate employee boarding hubs, and office destinations with live highway snapping.
+                {subtitle || 'Design company package plans (e.g. Pune Darshan) or custom customer routes with starting origin, middle stops, and final destination on the live map.'}
               </p>
             </div>
           </div>
@@ -952,7 +1055,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
         {/* QUICK CORPORATE PRESETS */}
         <div className="px-4 py-2 bg-slate-100 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs shrink-0">
           <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1 shrink-0">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Quick Corporate Corridors:
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Quick Route Plan Presets:
           </span>
           <div className="flex items-center gap-1.5 flex-nowrap">
             {PRESET_CORRIDORS.map((preset, idx) => (
@@ -1030,7 +1133,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                           </div>
                         </div>
                         <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md shrink-0">
-                          Inspect on Map ➔
+                          Inspect on Map Γ₧ö
                         </span>
                       </button>
                     ))}
@@ -1065,8 +1168,8 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
 
                   <div className="text-[10px] text-slate-300 mb-2.5 flex items-center gap-2 font-mono">
                     <span>{selectedMapSearchItem.category}</span>
-                    <span>•</span>
-                    <span>{selectedMapSearchItem.lat.toFixed(4)}°N, {selectedMapSearchItem.lng.toFixed(4)}°E</span>
+                    <span>ΓÇó</span>
+                    <span>{selectedMapSearchItem.lat.toFixed(4)}┬░N, {selectedMapSearchItem.lng.toFixed(4)}┬░E</span>
                   </div>
 
                   {/* 3 Action Buttons */}
@@ -1137,14 +1240,14 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <span className="text-[10px] text-slate-500 block font-medium">Total Distance</span>
                   <div className="text-sm sm:text-base font-extrabold text-indigo-700 font-mono">
-                    {totalDistanceKm > 0 ? `${totalDistanceKm} km` : '—'}
+                    {totalDistanceKm > 0 ? `${totalDistanceKm} km` : 'ΓÇö'}
                   </div>
                 </div>
 
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <span className="text-[10px] text-slate-500 block font-medium">Est. Drive Time</span>
                   <div className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
-                    {estimatedDurationMin > 0 ? `${estimatedDurationMin} min` : '—'}
+                    {estimatedDurationMin > 0 ? `${estimatedDurationMin} min` : 'ΓÇö'}
                   </div>
                 </div>
 
@@ -1158,7 +1261,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <span className="text-[10px] text-slate-500 block font-medium">Avg Speed</span>
                   <div className="text-sm sm:text-base font-extrabold text-emerald-600 font-mono">
-                    {totalDistanceKm > 0 ? `${avgSpeedKmh} km/h` : '—'}
+                    {totalDistanceKm > 0 ? `${avgSpeedKmh} km/h` : 'ΓÇö'}
                   </div>
                 </div>
               </div>
@@ -1169,23 +1272,23 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
               {/* CODE & TITLE */}
               <div className="grid grid-cols-3 gap-2.5">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Route Code</label>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Plan Code</label>
                   <input
                     type="text"
                     value={routeCode}
                     onChange={(e) => setRouteCode(e.target.value)}
-                    placeholder="CR-501"
+                    placeholder="PD-001 or CR-501"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-mono font-bold text-slate-900 uppercase focus:outline-none focus:border-indigo-600 focus:bg-white"
                     required
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Corridor Title</label>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1">Route Plan Name *</label>
                   <input
                     type="text"
                     value={routeName}
                     onChange={(e) => setRouteName(e.target.value)}
-                    placeholder="e.g. Swargate to Hinjawadi TechZone"
+                    placeholder="e.g. Pune Darshan Sightseeing Plan or Custom Employee Pickup"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white"
                     required
                   />
@@ -1207,7 +1310,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                     title="Swap Origin and Destination"
                   >
                     <ArrowUpDown className="w-3 h-3" />
-                    <span>⇄ Swap Direction</span>
+                    <span>Γçä Swap Direction</span>
                   </button>
                 </div>
 
@@ -1224,10 +1327,10 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                   }`}
                 >
                   <span className="flex items-center gap-1.5 font-bold">
-                    {!startPoint && !endPoint && '📍 Step 1 of 2: Search or choose Start Point (Origin A)'}
-                    {startPoint && !endPoint && '📍 Step 2 of 2: Now search or choose End Point (Destination B)'}
-                    {!startPoint && endPoint && '📍 Step 2 of 2: Now search or choose Start Point (Origin A)'}
-                    {startPoint && endPoint && '✅ Corridor Connected! Add intermediate stops below if required.'}
+                    {!startPoint && !endPoint && '≡ƒôì Step 1 of 2: Search or choose Start Point (Origin A)'}
+                    {startPoint && !endPoint && '≡ƒôì Step 2 of 2: Now search or choose End Point (Destination B)'}
+                    {!startPoint && endPoint && '≡ƒôì Step 2 of 2: Now search or choose Start Point (Origin A)'}
+                    {startPoint && endPoint && 'Γ£à Corridor Connected! Add intermediate stops below if required.'}
                   </span>
                   {(startPoint || endPoint || intermediateStops.length > 0) && (
                     <button
@@ -1265,7 +1368,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                     </span>
                     {startPoint && (
                       <span className="text-[10px] font-mono text-emerald-700 font-semibold">
-                        {startPoint.lat.toFixed(4)}°N, {startPoint.lng.toFixed(4)}°E
+                        {startPoint.lat.toFixed(4)}┬░N, {startPoint.lng.toFixed(4)}┬░E
                       </span>
                     )}
                   </div>
@@ -1369,7 +1472,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                             className="font-bold text-xs text-slate-900 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-600 focus:outline-none w-full truncate"
                           />
                           <span className="text-[10px] font-mono text-slate-400 block">
-                            {stop.lat.toFixed(4)}°N, {stop.lng.toFixed(4)}°E
+                            {stop.lat.toFixed(4)}┬░N, {stop.lng.toFixed(4)}┬░E
                           </span>
                         </div>
                       </div>
@@ -1475,7 +1578,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                     </span>
                     {endPoint && (
                       <span className="text-[10px] font-mono text-rose-700 font-semibold">
-                        {endPoint.lat.toFixed(4)}°N, {endPoint.lng.toFixed(4)}°E
+                        {endPoint.lat.toFixed(4)}┬░N, {endPoint.lng.toFixed(4)}┬░E
                       </span>
                     )}
                   </div>
@@ -1556,21 +1659,35 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                 Cancel
               </button>
 
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting || !startPoint || !endPoint}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md transition cursor-pointer"
-              >
-                {isSubmitting ? (
-                  <span>Saving Corridor...</span>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>Save Route Corridor ({totalDistanceKm} km)</span>
-                  </>
+              <div className="flex items-center gap-2">
+                {onSaveRouteAndTrip && (
+                  <button
+                    type="button"
+                    onClick={handleSaveAndDispatch}
+                    disabled={isSubmitting || !startPoint || !endPoint}
+                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-md transition cursor-pointer"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    <span>Save Route & Schedule Trip 🚀</span>
+                  </button>
                 )}
-              </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSubmit()}
+                  disabled={isSubmitting || !startPoint || !endPoint}
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md transition cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <span>Saving Corridor...</span>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>{submitButtonText || `Save Route Corridor (${totalDistanceKm} km)`}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

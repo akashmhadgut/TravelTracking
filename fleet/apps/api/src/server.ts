@@ -141,22 +141,13 @@ setInterval(() => {
 
 // Authentic Pune Transit Drivers Pool for Supervisor Dispatch & Telemetry
 const PUNE_DRIVERS_POOL = [
-  { name: 'Ganesh Jadhav', phone: '+91 98220 01122', license: 'MH-14-2018-0045129', rating: 4.9, duty_status: 'on_duty' },
-  { name: 'Sunil Patil', phone: '+91 98220 03344', license: 'MH-12-2019-0098432', rating: 4.8, duty_status: 'on_duty' },
-  { name: 'Ramesh More', phone: '+91 98220 05566', license: 'MH-14-2020-0012876', rating: 4.7, duty_status: 'on_duty' },
-  { name: 'Sachin Gaikwad', phone: '+91 98220 07788', license: 'MH-12-2021-0065412', rating: 4.9, duty_status: 'on_duty' },
-  { name: 'Nitin Deshmukh', phone: '+91 98220 09911', license: 'MH-14-2017-0032190', rating: 4.8, duty_status: 'on_duty' },
-  { name: 'Santosh Pawar', phone: '+91 98220 02233', license: 'MH-12-2019-0081234', rating: 4.6, duty_status: 'on_duty' },
-  { name: 'Ajay Shinde', phone: '+91 98220 04455', license: 'MH-14-2020-0077881', rating: 4.9, duty_status: 'on_duty' },
-  { name: 'Prakash Jagtap', phone: '+91 98220 06677', license: 'MH-12-2018-0055443', rating: 4.8, duty_status: 'on_duty' },
-  { name: 'Deepak Bhosale', phone: '+91 98220 08899', license: 'MH-14-2021-0022334', rating: 4.7, duty_status: 'on_duty' },
-  { name: 'Mahendra Kadam', phone: '+91 98220 01144', license: 'MH-12-2019-0044556', rating: 4.9, duty_status: 'on_duty' },
-  { name: 'Vilas Thorat', phone: '+91 98220 02255', license: 'MH-14-2018-0099887', rating: 4.8, duty_status: 'on_duty' },
-  { name: 'Manoj Mane', phone: '+91 98220 03366', license: 'MH-12-2020-0066778', rating: 4.7, duty_status: 'on_duty' },
-  { name: 'Yogesh Kulkarni', phone: '+91 98220 04477', license: 'MH-14-2019-0033221', rating: 4.9, duty_status: 'on_duty' },
-  { name: 'Rajesh Salunkhe', phone: '+91 98220 05588', license: 'MH-12-2021-0011223', rating: 4.8, duty_status: 'on_duty' },
-  { name: 'Pandurang Shirole', phone: '+91 98220 06699', license: 'MH-14-2017-0088776', rating: 4.8, duty_status: 'on_duty' },
-  { name: 'Amol Chavan', phone: '+91 98220 07711', license: 'MH-12-2020-0044332', rating: 4.9, duty_status: 'on_duty' },
+  { name: 'Ganesh Jadhav', phone: '+919822001122', license: 'MH-14-2018-0045129', rating: 4.9, duty_status: 'available' },
+  { name: 'Sunil Patil', phone: '+919822003344', license: 'MH-14-2019-0098432', rating: 4.8, duty_status: 'available' },
+  { name: 'Ramesh More', phone: '+919822005566', license: 'MH-14-2020-0012876', rating: 4.7, duty_status: 'available' },
+  { name: 'Sachin Gaikwad', phone: '+919822007788', license: 'MH-14-2021-0023847', rating: 4.9, duty_status: 'available' },
+  { name: 'Rahul Pawar', phone: '+919822009900', license: 'MH-14-2022-0034958', rating: 4.8, duty_status: 'available' },
+  { name: 'Deepak Shinde', phone: '+919822002211', license: 'MH-14-2023-0046069', rating: 4.9, duty_status: 'available' },
+  { name: 'Santosh Deshmukh', phone: '+919822004433', license: 'MH-14-2024-0057170', rating: 4.8, duty_status: 'available' },
 ];
 
 const supervisorInstructions: Array<{
@@ -315,9 +306,14 @@ fastify.get('/v1/live/buses', async () => {
           l.bus_id, l.org_id, l.trip_id, l.lat, l.lng, l.speed_kmh, l.heading_deg, l.accuracy_m,
           l.recorded_at, l.received_at, l.source, l.battery_pct, l.status, l.status_since, l.slow_since,
           l.rev::text as rev,
-          b.reg_no, b.make, b.model
+          b.reg_no, b.make, b.model,
+          d.id as driver_id, d.licence_class as driver_license, d.duty_status as driver_status,
+          u.name as driver_name, u.phone as driver_phone
         FROM latest_bus_locations l
         JOIN buses b ON b.id = l.bus_id
+        LEFT JOIN driver_assignments da ON da.bus_id = b.id
+        LEFT JOIN drivers d ON d.id = da.driver_id
+        LEFT JOIN users u ON u.id = d.user_id
         WHERE l.org_id = $1
         ORDER BY b.reg_no ASC
       `, ['0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1000']);
@@ -335,38 +331,37 @@ fastify.get('/v1/live/buses', async () => {
     }
   }
 
-  const fallback100: LatestBusLocation[] = [];
-  const baseLat = 18.5204;
-  const baseLng = 73.8567;
-  for (let i = 1; i <= 100; i++) {
-    const isStopped = i % 3 === 0;
-    const isStale = i % 5 === 0;
-    const isOffline = i % 10 === 0;
-    const status = isOffline ? 'offline' : isStale ? 'stale' : isStopped ? 'stopped' : 'moving';
+  const fallback7CarsData: any[] = [];
+
+  const fallback7: LatestBusLocation[] = fallback7CarsData.map((c, i) => {
+    const isStopped = c.status === 'stopped';
     const bus: any = {
-      bus_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c' + i.toString(16).padStart(4, '0'),
+      bus_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c000' + (i + 1),
       org_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1000',
-      lat: baseLat + Math.sin(i) * 0.08,
-      lng: baseLng + Math.cos(i) * 0.08,
-      speed_kmh: status === 'stopped' ? 0 : 25 + (i % 35),
-      heading_deg: (i * 35) % 360,
-      accuracy_m: 5.0 + (i % 3),
+      reg_no: c.reg_no,
+      make: c.make,
+      model: c.model,
+      lat: c.lat,
+      lng: c.lng,
+      speed_kmh: c.speed,
+      heading_deg: (i * 45) % 360,
+      accuracy_m: 4.5,
       recorded_at: new Date().toISOString(),
       received_at: new Date().toISOString(),
       source: 'phone',
-      battery_pct: 65 + (i % 35),
-      status,
+      battery_pct: 85,
+      status: c.status,
       status_since: new Date(Date.now() - (i * 2 + 5) * 60 * 1000).toISOString(),
       slow_since: isStopped ? new Date(Date.now() - (i * 2 + 5) * 60 * 1000).toISOString() : null,
-      rev: String(currentMonotonicRev + BigInt(i)),
+      rev: String(currentMonotonicRev + BigInt(i + 1)),
     };
-    fallback100.push(enrichBusWithSupervisorData(bus, i - 1) as any);
-  }
+    return enrichBusWithSupervisorData(bus, i) as any;
+  });
 
   return {
     snapshot_rev: String(currentMonotonicRev),
-    buses: fallback100,
-    count: fallback100.length,
+    buses: fallback7,
+    count: fallback7.length,
   };
 });
 

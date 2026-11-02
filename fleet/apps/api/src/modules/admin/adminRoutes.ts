@@ -31,7 +31,7 @@ const CreateUserSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(8),
-  role: z.enum(['super_admin', 'fleet_manager', 'supervisor', 'driver']),
+  role: z.enum(['super_admin', 'fleet_manager', 'supervisor']),
   password: z.string().min(4),
 });
 
@@ -39,7 +39,7 @@ const UpdateUserSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),
   phone: z.string().min(8).optional(),
-  role: z.enum(['super_admin', 'fleet_manager', 'supervisor', 'driver']).optional(),
+  role: z.enum(['super_admin', 'fleet_manager', 'supervisor']).optional(),
   status: z.enum(['active', 'suspended']).optional(),
 });
 
@@ -90,135 +90,11 @@ let inMemoryUsers: AdminUser[] = [
     last_login: 'Just now',
     created_at: '2026-01-10T08:00:00Z',
   },
-  {
-    id: 'usr-002',
-    name: 'Priya Sharma',
-    email: 'manager@fleetcommand.io',
-    phone: '+91 98220 00002',
-    role: 'fleet_manager',
-    status: 'active',
-    last_login: '15 mins ago',
-    created_at: '2026-02-15T10:30:00Z',
-  },
-  {
-    id: 'usr-003',
-    name: 'Amit Deshmukh',
-    email: 'supervisor@fleetcommand.io',
-    phone: '+91 98220 00003',
-    role: 'supervisor',
-    status: 'active',
-    last_login: '45 mins ago',
-    created_at: '2026-03-01T09:15:00Z',
-  },
-  {
-    id: 'usr-004',
-    name: 'Sunil Patil',
-    email: 'sunil.ops@fleetcommand.io',
-    phone: '+91 98220 00004',
-    role: 'supervisor',
-    status: 'suspended',
-    last_login: '3 days ago',
-    created_at: '2026-04-12T11:00:00Z',
-  },
 ];
 
-let inMemoryConsents = [
-  {
-    id: 'cst-001',
-    driver_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c3001',
-    driver_name: 'Ganesh Jadhav',
-    phone: '+91 98220 01122',
-    license: 'MH-14-2018-0045129',
-    status: 'CONSENTED',
-    version: 'v1.0 (DPDP 2023 §6)',
-    consented_at: '2026-10-26 09:30:15',
-    ip: '103.21.144.12',
-    device: 'Samsung Galaxy A34 (Android 14)',
-    proof_hash: 'sha256:4a8f9c0e2b1d3a5e7f9a1c3e5a7b9d1f3e5a7b9c1d3e5f7a9b1c3d5e7f9a1b3c',
-    notes: 'Affirmative multi-language digital consent verified during mobile phone onboarding.',
-  },
-  {
-    id: 'cst-002',
-    driver_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c3002',
-    driver_name: 'Sunil Patil',
-    phone: '+91 98220 03344',
-    license: 'MH-12-2019-0098432',
-    status: 'CONSENTED',
-    version: 'v1.0 (DPDP 2023 §6)',
-    consented_at: '2026-10-25 14:15:22',
-    ip: '103.21.144.15',
-    device: 'Xiaomi Redmi Note 12 (Android 13)',
-    proof_hash: 'sha256:9b1c3d5e7f9a1b3c4a8f9c0e2b1d3a5e7f9a1c3e5a7b9d1f3e5a7b9c1d3e5f7a',
-    notes: 'Signed biometric token and explicit location tracking consent.',
-  },
-  {
-    id: 'cst-003',
-    driver_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c3003',
-    driver_name: 'Ramesh More',
-    phone: '+91 98220 05566',
-    license: 'MH-14-2020-0012876',
-    status: 'PENDING',
-    version: 'Pending Acceptance',
-    consented_at: '-',
-    ip: '-',
-    device: 'Pending Phone Login',
-    proof_hash: '-',
-    notes: 'Awaiting driver mobile sign-in. Dispatch prohibited until consent is recorded.',
-  },
-];
+let inMemoryConsents: any[] = [];
 
-let inMemoryAuditEntries = [
-  {
-    id: 'aud-001',
-    actor: 'admin@fleetcommand.io (Super Admin)',
-    action: 'UPDATE_ORGANIZATION_SETTINGS',
-    category: 'SETTINGS',
-    entity: 'organizations/settings',
-    timestamp: '2026-10-26 12:15:00',
-    ip: '103.21.144.10',
-    details: 'Speed limit set to 80 km/h; GPS retention policy confirmed at 90 days',
-  },
-  {
-    id: 'aud-002',
-    actor: 'manager@fleetcommand.io (Fleet Manager)',
-    action: 'DISPATCH_TRIP',
-    category: 'DISPATCH',
-    entity: 'trips/0192f0a1-7c3e',
-    timestamp: '2026-10-26 11:45:10',
-    ip: '103.21.144.12',
-    details: 'Bus MH-12-DT-0001 paired with Driver Ganesh Jadhav on Route RT-501',
-  },
-  {
-    id: 'aud-003',
-    actor: 'manager@fleetcommand.io (Fleet Manager)',
-    action: 'ENROLL_DRIVER_RECORD',
-    category: 'ROSTER',
-    entity: 'drivers/drv-001',
-    timestamp: '2026-10-26 11:20:00',
-    ip: '103.21.144.12',
-    details: 'Enrolled driver Ganesh Jadhav (HMV-Passenger Licence MH-14-2018-0045129)',
-  },
-  {
-    id: 'aud-004',
-    actor: 'ganesh.jadhav (Driver Terminal)',
-    action: 'DPDP_LOCATION_CONSENT_ACCEPTED',
-    category: 'CONSENT',
-    entity: 'consents/cst-001',
-    timestamp: '2026-10-26 09:30:15',
-    ip: '172.56.21.89',
-    details: 'Driver completed DPDP Act 2023 §6 affirmative location tracking consent v1.0',
-  },
-  {
-    id: 'aud-005',
-    actor: 'admin@fleetcommand.io (Super Admin)',
-    action: 'CREATE_USER_ACCOUNT',
-    category: 'ROSTER',
-    entity: 'users/usr-003',
-    timestamp: '2026-10-25 18:00:20',
-    ip: '103.21.144.10',
-    details: 'Created supervisor staff account for Amit Deshmukh',
-  },
-];
+let inMemoryAuditEntries: any[] = [];
 
 // Helper to record an audit entry
 function recordAuditEntry(entry: {
@@ -352,14 +228,17 @@ export async function adminRoutes(fastify: FastifyInstance) {
   });
 
   // 5. GET /v1/admin/users
-  fastify.get('/v1/admin/users', async () => {
+  fastify.get('/v1/admin/users', async (request) => {
+    const { include_drivers } = (request.query as any) || {};
     const dbOnline = await isDbConnected();
     if (dbOnline) {
       try {
-        const res = await query(
-          `SELECT id, name, email, phone, role, status, created_at FROM users WHERE org_id = $1 ORDER BY name ASC`,
-          [inMemoryOrg.id]
-        );
+        let sql = `SELECT id, name, email, phone, role, status, created_at FROM users WHERE org_id = $1`;
+        if (include_drivers !== 'true') {
+          sql += ` AND role != 'driver'`;
+        }
+        sql += ` ORDER BY name ASC`;
+        const res = await query(sql, [inMemoryOrg.id]);
         if (res.rows.length > 0) {
           return {
             users: res.rows.map((r) => ({
@@ -372,7 +251,8 @@ export async function adminRoutes(fastify: FastifyInstance) {
         fastify.log.warn(err, 'Failed to fetch users from DB');
       }
     }
-    return { users: inMemoryUsers };
+    const staffList = include_drivers === 'true' ? inMemoryUsers : inMemoryUsers.filter((u) => u.role !== 'driver');
+    return { users: staffList };
   });
 
   // 6. POST /v1/admin/users (Create User)

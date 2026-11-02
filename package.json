@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
+    "driver": "cd fleet/apps/driver && npx expo start --tunnel -c",
+    "driver:usb": "cd fleet/apps/driver && npx expo start --localhost -c",
     "start": "tsx server.ts",
     "build": "vite build",
     "preview": "vite preview",

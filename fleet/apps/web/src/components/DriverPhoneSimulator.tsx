@@ -244,7 +244,7 @@ export const DriverPhoneSimulator: React.FC = () => {
               <p className="text-[11px] text-slate-400 mb-4">Statutory Driver Location Notice</p>
 
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 text-[11px] text-slate-300 leading-relaxed">
-                <p>• Location tracking is strictly activated <strong>ONLY while your assigned bus trip is in progress</strong>.</p>
+                <p>• Location tracking is strictly activated <strong>ONLY while your assigned car trip is in progress</strong>.</p>
                 <p>• Tracking stops immediately the moment you tap 'End Trip'.</p>
                 <p>• Data is processed solely for fleet coordination, passenger ETA, and passenger safety.</p>
               </div>

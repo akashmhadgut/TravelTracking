@@ -134,33 +134,9 @@ export async function reportRoutes(fastify: FastifyInstance) {
       }
     }
 
-    // Fallback if data is empty or db offline
+    // If db offline or data is empty, maintain empty array
     if (data.length === 0) {
-      if (type === 'trip_summary') {
-        data = [
-          {
-            trip_id: '0192f0a1-7c3e-7c11-9d0a-5e2b6f4c1a10',
-            bus_reg: 'MH-12-DT-0001',
-            driver_name: 'Ganesh Jadhav',
-            route_code: 'RT-501',
-            status: 'completed',
-            distance_km: 24.5,
-            delay_minutes: 5,
-            planned_start: '2026-10-26T05:00:00Z',
-            actual_start: '2026-10-26T05:05:00Z',
-          },
-        ];
-      } else if (type === 'gps_availability') {
-        data = [
-          {
-            bus_reg: 'MH-12-DT-0001',
-            points_received: 720,
-            points_expected: 720,
-            availability_pct: 100.0,
-            weak_fixes_count: 2,
-          },
-        ];
-      }
+      data = [];
     }
 
     if (format === 'csv' && data.length > 0) {
