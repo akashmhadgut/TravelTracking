@@ -1113,8 +1113,9 @@ export default function App() {
     );
   };
 
-  const transmitIncident = async () => {
+  const transmitIncident = async (overrideKind?: any) => {
     try {
+      const kind = typeof overrideKind === 'string' ? overrideKind : incidentKind;
       await fetch(`${serverUrl}/v1/driver/incidents`, {
         method: 'POST',
         headers: {
@@ -1123,7 +1124,7 @@ export default function App() {
         },
         body: JSON.stringify({
           tripId,
-          type: incidentKind,
+          type: kind,
           lat: currentLat,
           lng: currentLng,
           reportedAt: new Date().toISOString(),

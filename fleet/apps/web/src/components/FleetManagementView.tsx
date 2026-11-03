@@ -60,6 +60,7 @@ export interface BusItem {
   tracking_source: string;
   is_active: boolean;
   status?: 'active' | 'on_trip' | 'maintenance' | 'inactive';
+  depot?: string;
   documents: VehicleMandatoryDocs;
 }
 
@@ -78,11 +79,140 @@ export interface DriverItem {
 export type CarItem = BusItem;
 
 export const generateDemoCars = (): BusItem[] => {
-  return [];
+  return [
+    {
+      id: 'car-1',
+      reg_no: 'MH-12-DT-0001',
+      make: 'Tata Motors',
+      model: 'Nexon EV Max',
+      capacity: 5,
+      tracking_source: 'phone',
+      is_active: true,
+      status: 'active',
+      depot: 'Pune Central Hub',
+      documents: {
+        rc: { docNo: 'RC-MH-12-DT-0001', validUntil: '2039-01-01', status: 'verified' },
+        roadTax: { receiptNo: 'RTX-MH-12-DT-0001-2026', validUntil: '2029-03-31', status: 'verified' },
+        puc: { certNo: 'PUC-MH-12-DT-0001-01', validUntil: '2027-04-01', status: 'verified' },
+        insurance: { policyNo: 'INS-MH-12-DT-0001-99', insurer: 'HDFC ERGO Commercial', validUntil: '2027-08-20', status: 'verified' },
+        permit: { permitNo: 'PMT-MH-12-DT-0001-01', type: 'Contract Carriage (Corporate Cab)', validUntil: '2029-01-01', status: 'verified' },
+        fitness: { certNo: 'FC-MH-12-DT-0001-001', validUntil: '2028-06-30', status: 'verified' },
+      },
+    },
+    {
+      id: 'car-2',
+      reg_no: 'MH-12-DT-0002',
+      make: 'MG Motor',
+      model: 'ZS EV Exclusive',
+      capacity: 5,
+      tracking_source: 'phone',
+      is_active: true,
+      status: 'active',
+      depot: 'Hinjawadi Depot',
+      documents: {
+        rc: { docNo: 'RC-MH-12-DT-0002', validUntil: '2039-01-01', status: 'verified' },
+        roadTax: { receiptNo: 'RTX-MH-12-DT-0002-2026', validUntil: '2029-03-31', status: 'verified' },
+        puc: { certNo: 'PUC-MH-12-DT-0002-01', validUntil: '2027-04-01', status: 'verified' },
+        insurance: { policyNo: 'INS-MH-12-DT-0002-99', insurer: 'ICICI Lombard Commercial', validUntil: '2027-08-20', status: 'verified' },
+        permit: { permitNo: 'PMT-MH-12-DT-0002-01', type: 'Contract Carriage (Corporate Cab)', validUntil: '2029-01-01', status: 'verified' },
+        fitness: { certNo: 'FC-MH-12-DT-0002-001', validUntil: '2028-06-30', status: 'verified' },
+      },
+    },
+    {
+      id: 'car-3',
+      reg_no: 'MH-12-DT-0003',
+      make: 'Hyundai',
+      model: 'Ioniq 5 Electric',
+      capacity: 5,
+      tracking_source: 'phone',
+      is_active: true,
+      status: 'active',
+      depot: 'Kharadi TechZone Depot',
+      documents: {
+        rc: { docNo: 'RC-MH-12-DT-0003', validUntil: '2039-01-01', status: 'verified' },
+        roadTax: { receiptNo: 'RTX-MH-12-DT-0003-2026', validUntil: '2029-03-31', status: 'verified' },
+        puc: { certNo: 'PUC-MH-12-DT-0003-01', validUntil: '2027-04-01', status: 'verified' },
+        insurance: { policyNo: 'INS-MH-12-DT-0003-99', insurer: 'Bajaj Allianz Commercial', validUntil: '2027-08-20', status: 'verified' },
+        permit: { permitNo: 'PMT-MH-12-DT-0003-01', type: 'Contract Carriage (Corporate Cab)', validUntil: '2029-01-01', status: 'verified' },
+        fitness: { certNo: 'FC-MH-12-DT-0003-001', validUntil: '2028-06-30', status: 'verified' },
+      },
+    },
+    {
+      id: 'car-4',
+      reg_no: 'MH-12-DT-0004',
+      make: 'Mahindra',
+      model: 'XUV400 EV Pro',
+      capacity: 5,
+      tracking_source: 'phone',
+      is_active: true,
+      status: 'active',
+      depot: 'Magarpatta Station',
+      documents: {
+        rc: { docNo: 'RC-MH-12-DT-0004', validUntil: '2039-01-01', status: 'verified' },
+        roadTax: { receiptNo: 'RTX-MH-12-DT-0004-2026', validUntil: '2029-03-31', status: 'verified' },
+        puc: { certNo: 'PUC-MH-12-DT-0004-01', validUntil: '2027-04-01', status: 'verified' },
+        insurance: { policyNo: 'INS-MH-12-DT-0004-99', insurer: 'Tata AIG Commercial', validUntil: '2027-08-20', status: 'verified' },
+        permit: { permitNo: 'PMT-MH-12-DT-0004-01', type: 'Contract Carriage (Corporate Cab)', validUntil: '2029-01-01', status: 'verified' },
+        fitness: { certNo: 'FC-MH-12-DT-0004-001', validUntil: '2028-06-30', status: 'verified' },
+      },
+    },
+  ];
 };
 
 export const generateDemoDrivers = (): DriverItem[] => {
-  return [];
+  return [
+    {
+      id: 'driver-akash-1',
+      name: 'Akash',
+      phone: '9021962276',
+      license: '4657168',
+      class: 'HMV-Passenger (Commercial)',
+      address: 'Pune',
+      pin: '411001',
+      duty_status: 'on_duty',
+      documents: {
+        aadhaar: { docNo: 'XXXX-XXXX-9912', status: 'verified' },
+        policeVerification: { certNo: 'PUN-POL-4657', policeStation: 'Shivajinagar Police Station', validUntil: '2027-12-31', status: 'verified' },
+        medicalFitness: { certNo: 'MED-FIT-1029', doctorName: 'Dr. P. R. Deshmukh (MBBS)', doctorReg: 'MMC-2015-0812', validUntil: '2027-10-30', status: 'verified' },
+        drivingLicence: { licenseNo: '4657168', classType: 'HMV-Passenger (Commercial)', validUntil: '2030-05-15', status: 'verified' },
+        contactNumber: { phone: '9021962276', isVerified: true },
+      },
+    },
+    {
+      id: 'driver-2',
+      name: 'Ganesh Jadhav',
+      phone: '+919822001122',
+      license: 'MH-14-2018-0045129',
+      class: 'HMV-Passenger (Commercial)',
+      address: 'Kothrud, Pune',
+      pin: '411038',
+      duty_status: 'on_duty',
+      documents: {
+        aadhaar: { docNo: 'XXXX-XXXX-4812', status: 'verified' },
+        policeVerification: { certNo: 'PUN-POL-0045', policeStation: 'Kothrud Police Station', validUntil: '2028-11-20', status: 'verified' },
+        medicalFitness: { certNo: 'MED-FIT-0045', doctorName: 'Dr. S. K. Joshi (MBBS)', doctorReg: 'MMC-2004-0981', validUntil: '2027-10-15', status: 'verified' },
+        drivingLicence: { licenseNo: 'MH-14-2018-0045129', classType: 'HMV-Passenger (Commercial)', validUntil: '2029-04-18', status: 'verified' },
+        contactNumber: { phone: '+919822001122', isVerified: true },
+      },
+    },
+    {
+      id: 'driver-3',
+      name: 'Sunil Patil',
+      phone: '+919822003344',
+      license: 'MH-14-2019-0098432',
+      class: 'HMV-Passenger (Commercial)',
+      address: 'Shivajinagar, Pune',
+      pin: '411005',
+      duty_status: 'available',
+      documents: {
+        aadhaar: { docNo: 'XXXX-XXXX-9843', status: 'verified' },
+        policeVerification: { certNo: 'PUN-POL-0098', policeStation: 'Shivajinagar Police Station', validUntil: '2027-12-31', status: 'verified' },
+        medicalFitness: { certNo: 'MED-FIT-0098', doctorName: 'Dr. P. R. Deshmukh (MBBS)', doctorReg: 'MMC-2015-0812', validUntil: '2027-10-30', status: 'verified' },
+        drivingLicence: { licenseNo: 'MH-14-2019-0098432', classType: 'HMV-Passenger (Commercial)', validUntil: '2030-05-15', status: 'verified' },
+        contactNumber: { phone: '+919822003344', isVerified: true },
+      },
+    },
+  ];
 };
 
 export interface FleetManagementViewProps {
@@ -120,9 +250,14 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
     nextStatus: 'active' | 'on_trip' | 'maintenance' | 'inactive'
   ) => {
     const nextIsActive = nextStatus === 'active' || nextStatus === 'on_trip';
-    setBuses((prev) =>
-      prev.map((b) => (b.id === carId ? { ...b, status: nextStatus, is_active: nextIsActive } : b))
-    );
+    setBuses((prev) => {
+      const updated = prev.map((b) => (b.id === carId ? { ...b, status: nextStatus, is_active: nextIsActive } : b));
+      try {
+        localStorage.setItem('fleetcommand_cars_roster', JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('fleetcommand_cars_updated', { detail: updated }));
+      } catch {}
+      return updated;
+    });
     try {
       await fetch(`/v1/buses/${carId}`, {
         method: 'PUT',
@@ -134,9 +269,14 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
 
   // Quick Inline Duty Status Update for Drivers
   const handleQuickChangeDriverDuty = async (driverId: string, nextDuty: string) => {
-    setDrivers((prev) =>
-      prev.map((d) => (d.id === driverId ? { ...d, duty_status: nextDuty } : d))
-    );
+    setDrivers((prev) => {
+      const updated = prev.map((d) => (d.id === driverId ? { ...d, duty_status: nextDuty } : d));
+      try {
+        localStorage.setItem('fleetcommand_drivers_roster', JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('fleetcommand_drivers_updated', { detail: updated }));
+      } catch {}
+      return updated;
+    });
     try {
       await fetch(`/v1/drivers/${driverId}`, {
         method: 'PUT',
@@ -225,7 +365,20 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
   };
 
   // 100 Cars State with Client's 6 Mandatory Vehicle Documents
-  const [buses, setBuses] = useState<BusItem[]>(() => generateDemoCars());
+  const [buses, setBuses] = useState<BusItem[]>(() => {
+    try {
+      const cached = localStorage.getItem('fleetcommand_cars_roster');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    const initial = generateDemoCars();
+    try {
+      localStorage.setItem('fleetcommand_cars_roster', JSON.stringify(initial));
+    } catch {}
+    return initial;
+  });
   const [carSearch, setCarSearch] = useState('');
 
   // Add Car Modal Form State
@@ -298,7 +451,20 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
   const [editDriverDocFiles, setEditDriverDocFiles] = useState<Record<string, { name: string; size: string; url: string }>>({});
 
   // 100 Drivers State with Client's 5 Required Driver Documents
-  const [drivers, setDrivers] = useState<DriverItem[]>(() => generateDemoDrivers());
+  const [drivers, setDrivers] = useState<DriverItem[]>(() => {
+    try {
+      const cached = localStorage.getItem('fleetcommand_drivers_roster');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    const initial = generateDemoDrivers();
+    try {
+      localStorage.setItem('fleetcommand_drivers_roster', JSON.stringify(initial));
+    } catch {}
+    return initial;
+  });
   const [driverSearch, setDriverSearch] = useState('');
 
   const filteredCars = useMemo(() => {
@@ -370,7 +536,27 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
   const [selectedTripForEdit, setSelectedTripForEdit] = useState<any | null>(null);
   const [showDispatchTripModalInFleet, setShowDispatchTripModalInFleet] = useState(false);
 
-  // Sync with live PostgreSQL backend
+  // Listen for cross-view sync events
+  useEffect(() => {
+    const handleDriversUpdated = (e: any) => {
+      if (Array.isArray(e.detail) && e.detail.length > 0) {
+        setDrivers(e.detail);
+      }
+    };
+    const handleCarsUpdated = (e: any) => {
+      if (Array.isArray(e.detail) && e.detail.length > 0) {
+        setBuses(e.detail);
+      }
+    };
+    window.addEventListener('fleetcommand_drivers_updated', handleDriversUpdated);
+    window.addEventListener('fleetcommand_cars_updated', handleCarsUpdated);
+    return () => {
+      window.removeEventListener('fleetcommand_drivers_updated', handleDriversUpdated);
+      window.removeEventListener('fleetcommand_cars_updated', handleCarsUpdated);
+    };
+  }, []);
+
+  // Sync with live PostgreSQL backend without wiping locally enrolled records
   useEffect(() => {
     fetch('/v1/buses')
       .then((res) => res.json())
@@ -394,7 +580,16 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
               fitness: { certNo: b.documents?.fitness?.cert_number || b.documents?.fitness?.certNo || ('FC-' + b.reg_no + '-001'), validUntil: '2028-06-30', status: 'verified' },
             },
           }));
-          setBuses(serverCars);
+          setBuses((prev) => {
+            const serverIds = new Set(serverCars.map((s: any) => s.id));
+            const serverRegs = new Set(serverCars.map((s: any) => (s.reg_no || '').toLowerCase()));
+            const localsToKeep = prev.filter((p) => !serverIds.has(p.id) && !serverRegs.has((p.reg_no || '').toLowerCase()));
+            const merged = [...localsToKeep, ...serverCars];
+            try {
+              localStorage.setItem('fleetcommand_cars_roster', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
         }
       })
       .catch(() => { });
@@ -420,7 +615,17 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
               contactNumber: { phone: d.phone || ('+91982200' + (1000 + idx)), isVerified: true },
             },
           }));
-          setDrivers(serverDrivers);
+          setDrivers((prev) => {
+            const serverIds = new Set(serverDrivers.map((s: any) => s.id));
+            const serverPhones = new Set(serverDrivers.map((s: any) => s.phone));
+            const serverLicenses = new Set(serverDrivers.map((s: any) => s.license));
+            const localsToKeep = prev.filter((p) => !serverIds.has(p.id) && !serverPhones.has(p.phone) && !serverLicenses.has(p.license));
+            const merged = [...localsToKeep, ...serverDrivers];
+            try {
+              localStorage.setItem('fleetcommand_drivers_roster', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
         }
       })
       .catch(() => { });
@@ -653,7 +858,14 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
     });
     setUploadedFiles(updatedUploads);
 
-    setBuses((prev) => [...prev, newBusItem]);
+    setBuses((prev) => {
+      const updated = [...prev, newBusItem];
+      try {
+        localStorage.setItem('fleetcommand_cars_roster', JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('fleetcommand_cars_updated', { detail: updated }));
+      } catch {}
+      return updated;
+    });
     setNewRegNo('');
     setNewRcNo('');
     setNewRoadTaxNo('');
@@ -726,8 +938,8 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
       fitness: { certNo: editFitnessNo, validUntil: editFitnessValid, status: 'verified' },
     };
 
-    setBuses((prev) =>
-      prev.map((b) =>
+    setBuses((prev) => {
+      const updated = prev.map((b) =>
         b.id === editingCar.id
           ? {
             ...b,
@@ -741,8 +953,13 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
             documents: updatedDocs,
           }
           : b
-      )
-    );
+      );
+      try {
+        localStorage.setItem('fleetcommand_cars_roster', JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('fleetcommand_cars_updated', { detail: updated }));
+      } catch {}
+      return updated;
+    });
 
     const updatedUploads = { ...uploadedFiles };
     Object.entries(editBusDocFiles).forEach(([docKey, fileData]) => {
@@ -792,8 +1009,8 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
       }),
     }).catch(() => { });
 
-    setDrivers((prev) =>
-      prev.map((d) =>
+    setDrivers((prev) => {
+      const updated: DriverItem[] = prev.map((d) =>
         d.id === editingDriver.id
           ? {
             ...d,
@@ -805,32 +1022,37 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
             duty_status: editDriverDutyStatus,
             documents: {
               ...d.documents,
-              aadhaar: { docNo: editDriverAadhaar, status: 'verified' },
+              aadhaar: { docNo: editDriverAadhaar, status: 'verified' as const },
               policeVerification: {
                 certNo: d.documents?.policeVerification?.certNo || 'PUN-POL-2024',
                 policeStation: editDriverPoliceStation,
                 validUntil: '2027-12-31',
-                status: 'verified',
+                status: 'verified' as const,
               },
               medicalFitness: {
                 certNo: d.documents?.medicalFitness?.certNo || 'MED-FIT-88914',
                 doctorName: editDriverDoctorName,
                 doctorReg: 'MMC-2015-0812',
                 validUntil: '2027-10-30',
-                status: 'verified',
+                status: 'verified' as const,
               },
               drivingLicence: {
                 licenseNo: editDriverLicense,
                 classType: editDriverClass,
                 validUntil: '2030-05-15',
-                status: 'verified',
+                status: 'verified' as const,
               },
               contactNumber: { phone: editDriverPhone, isVerified: true },
             },
           }
           : d
-      )
-    );
+      );
+      try {
+        localStorage.setItem('fleetcommand_drivers_roster', JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('fleetcommand_drivers_updated', { detail: updated }));
+      } catch {}
+      return updated;
+    });
 
     const updatedUploads = { ...uploadedFiles };
     Object.entries(editDriverDocFiles).forEach(([docKey, fileData]) => {
@@ -847,7 +1069,7 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
     e.preventDefault();
     if (!newDriverName || !newDriverPhone || !newDriverLicense) return;
 
-    const newId = String(drivers.length + 1);
+    const newId = `driver-${Date.now()}`;
 
     const newDriverDocs: DriverRequiredDocs = {
       aadhaar: { docNo: newAadhaarNo || 'XXXX-XXXX-9912', status: 'verified' },
@@ -864,7 +1086,7 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
       license: newDriverLicense,
       class: 'HMV-Passenger (Commercial)',
       address: newDriverAddress || 'Pune, MH',
-      pin: '123456',
+      pin: '411001',
       duty_status: 'on_duty',
       documents: newDriverDocs,
     };
@@ -876,7 +1098,30 @@ export const FleetManagementView: React.FC<FleetManagementViewProps> = ({ initia
     });
     setUploadedFiles(updatedUploads);
 
-    setDrivers((prev) => [...prev, newDriverItem]);
+    setDrivers((prev) => {
+      const updated = [newDriverItem, ...prev.filter((d) => d.phone !== newDriverPhone && d.license !== newDriverLicense)];
+      try {
+        localStorage.setItem('fleetcommand_drivers_roster', JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('fleetcommand_drivers_updated', { detail: updated }));
+      } catch {}
+      return updated;
+    });
+
+    // Also persist via API if server available
+    try {
+      fetch('/v1/drivers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newDriverName,
+          phone: newDriverPhone,
+          licence_number: newDriverLicense,
+          licence_class: 'HMV-Passenger (Commercial)',
+          address: newDriverAddress || 'Pune, MH',
+        }),
+      }).catch(() => {});
+    } catch {}
+
     setNewDriverName('');
     setNewDriverPhone('');
     setNewDriverLicense('');

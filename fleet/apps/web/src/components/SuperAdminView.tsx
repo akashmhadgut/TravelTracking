@@ -102,6 +102,39 @@ export const SuperAdminView: React.FC = () => {
       last_login: 'Just now',
     },
   ]);
+
+  // Synchronized fleet resource caches for Super Admin operations
+  const [cachedDrivers, setCachedDrivers] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('fleetcommand_drivers_roster');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return [];
+  });
+
+  const [cachedCars, setCachedCars] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('fleetcommand_cars_roster');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return [];
+  });
+
+  useEffect(() => {
+    const handleDriversUpdated = (e: any) => {
+      if (Array.isArray(e.detail)) setCachedDrivers(e.detail);
+    };
+    const handleCarsUpdated = (e: any) => {
+      if (Array.isArray(e.detail)) setCachedCars(e.detail);
+    };
+    window.addEventListener('fleetcommand_drivers_updated', handleDriversUpdated);
+    window.addEventListener('fleetcommand_cars_updated', handleCarsUpdated);
+    return () => {
+      window.removeEventListener('fleetcommand_drivers_updated', handleDriversUpdated);
+      window.removeEventListener('fleetcommand_cars_updated', handleCarsUpdated);
+    };
+  }, []);
+
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -480,14 +513,26 @@ export const SuperAdminView: React.FC = () => {
   };
 
 
-  // Only Administrative Staff Users (Excludes field drivers who belong in Drivers & Dossiers)
-  const staffUsers = useMemo(() => {
-    return users.filter((u) => u.role !== 'driver');
-  }, [users]);
+  // Unified Staff & Enrolled Drivers Roster
+  const allStaffUsers = useMemo(() => {
+    const driverUsers: UserRecord[] = cachedDrivers.map((d: any) => ({
+      id: d.id,
+      name: d.name,
+      email: `${(d.name || 'driver').toLowerCase().replace(/\s+/g, '.')}@deccantransit.in`,
+      phone: d.phone,
+      role: 'driver' as const,
+      status: d.duty_status === 'inactive' ? 'suspended' : 'active',
+      last_login: d.duty_status === 'on_duty' ? 'Active on Shift' : 'Available',
+    }));
+    return [...users, ...driverUsers];
+  }, [users, cachedDrivers]);
+
+  // Backward compatibility alias
+  const staffUsers = allStaffUsers;
 
   // Filtered Staff Users List
   const filteredUsers = useMemo(() => {
-    return staffUsers.filter((u) => {
+    return allStaffUsers.filter((u) => {
       const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
       const matchesSearch =
         u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
@@ -495,7 +540,7 @@ export const SuperAdminView: React.FC = () => {
         u.phone.includes(userSearchQuery);
       return matchesRole && matchesSearch;
     });
-  }, [staffUsers, userRoleFilter, userSearchQuery]);
+  }, [allStaffUsers, userRoleFilter, userSearchQuery]);
 
 
 
@@ -652,48 +697,17 @@ export const SuperAdminView: React.FC = () => {
       {/* Main Content Body */}
       <div className="flex-1 overflow-y-auto">
         {/* ========================================================================= */}
-        {/* TAB 1: CARS & MANDATORY VEHICLE DOCUMENTS (100) */}
+        {/* TABS 1-3: FLEET & RESOURCE ADMINISTRATION (CARS, DRIVERS, TRIPS) */}
         {/* ========================================================================= */}
-        {activeTab === 'cars' && (
+        {(activeTab === 'cars' || activeTab === 'drivers' || activeTab === 'trips') && (
           <div className="h-full">
             <FleetManagementView
-              initialTab="cars"
-              hideHeaderTabs={true}
-              onTabChange={(tab) => {
-                if (tab === 'drivers') setActiveTab('drivers');
-              }}
-            />
-          </div>
-        )}
-
-
-        {/* ========================================================================= */}
-        {/* TAB 2: DRIVERS & MANDATORY DOSSIERS (100) */}
-        {/* ========================================================================= */}
-        {activeTab === 'drivers' && (
-          <div className="h-full">
-            <FleetManagementView
-              initialTab="drivers"
-              hideHeaderTabs={true}
-              onTabChange={(tab) => {
-                if (tab === 'cars') setActiveTab('cars');
-              }}
-            />
-          </div>
-        )}
-
-
-        {/* ========================================================================= */}
-        {/* TAB 3: TRIPS & SCHEDULES (DISPATCH & PASSENGER MANIFEST) */}
-        {/* ========================================================================= */}
-        {activeTab === 'trips' && (
-          <div className="h-full">
-            <FleetManagementView
-              initialTab="routes"
+              initialTab={activeTab === 'trips' ? 'routes' : activeTab}
               hideHeaderTabs={true}
               onTabChange={(tab) => {
                 if (tab === 'cars') setActiveTab('cars');
                 if (tab === 'drivers') setActiveTab('drivers');
+                if (tab === 'routes') setActiveTab('trips');
               }}
             />
           </div>
@@ -1020,6 +1034,16 @@ export const SuperAdminView: React.FC = () => {
                   }`}
                 >
                   All Staff ({staffUsers.length})
+                </button>
+                <button
+                  onClick={() => setUserRoleFilter('driver')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    userRoleFilter === 'driver'
+                      ? 'bg-white text-emerald-700 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Drivers ({staffUsers.filter((u) => u.role === 'driver').length})
                 </button>
                 <button
                   onClick={() => setUserRoleFilter('super_admin')}
@@ -1698,6 +1722,8 @@ export const SuperAdminView: React.FC = () => {
       {/* ========================================================================= */}
       {showDispatchModal && (
         <DispatchTripModal
+          availableCars={cachedCars}
+          availableDrivers={cachedDrivers}
           onClose={() => setShowDispatchModal(false)}
           onTripDispatched={() => {
             setShowDispatchModal(false);

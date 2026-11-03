@@ -135,7 +135,7 @@ const PRESET_CORRIDORS = [
     ],
   },
   {
-    label: 'Swargate Γ₧ö Hinjawadi IT Corridor',
+    label: 'Swargate → Hinjawadi IT Corridor',
     code: 'CR-401',
     name: 'Swargate Hub to Hinjawadi Phase 3 TechZone',
     start: { name: 'Swargate Metro Station & Central Hub', lat: 18.5018, lng: 73.8586 },
@@ -148,7 +148,7 @@ const PRESET_CORRIDORS = [
     ],
   },
   {
-    label: 'Airport Γ₧ö Magarpatta Cyber City',
+    label: 'Airport → Magarpatta Cyber City',
     code: 'CR-205',
     name: 'Pune Airport to Magarpatta Cyber City Tech Hub',
     start: { name: 'Pune International Airport (PNQ Terminal 1 & 2)', lat: 18.5822, lng: 73.9197 },
@@ -160,7 +160,7 @@ const PRESET_CORRIDORS = [
     ],
   },
   {
-    label: 'Kothrud Γ₧ö Kharadi EON IT Park',
+    label: 'Kothrud → Kharadi EON IT Park',
     code: 'CR-308',
     name: 'Kothrud Vanaz to Kharadi EON Free Zone IT Park',
     start: { name: 'Kothrud - Vanaz Metro Station & Hub', lat: 18.5042, lng: 73.8078 },
@@ -172,7 +172,7 @@ const PRESET_CORRIDORS = [
     ],
   },
   {
-    label: 'Katraj Γ₧ö Baner Balewadi Corporate Hub',
+    label: 'Katraj → Baner Balewadi Corporate Hub',
     code: 'CR-512',
     name: 'Katraj Wonder City to Balewadi High Street',
     start: { name: 'Katraj - Wonder City & Snake Park Hub', lat: 18.4575, lng: 73.8677 },
@@ -433,7 +433,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
       setAvgSpeedKmh(35);
 
       const fallbackLineString = {
-        type: 'LineString',
+        type: 'LineString' as const,
         coordinates: stopsList.map((s) => [s.lng, s.lat]),
       };
       setRouteGeometry(fallbackLineString);
@@ -1133,7 +1133,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                           </div>
                         </div>
                         <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md shrink-0">
-                          Inspect on Map Γ₧ö
+                          Inspect on Map &rarr;
                         </span>
                       </button>
                     ))}
@@ -1240,14 +1240,14 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <span className="text-[10px] text-slate-500 block font-medium">Total Distance</span>
                   <div className="text-sm sm:text-base font-extrabold text-indigo-700 font-mono">
-                    {totalDistanceKm > 0 ? `${totalDistanceKm} km` : 'ΓÇö'}
+                    {totalDistanceKm > 0 ? `${totalDistanceKm} km` : '--'}
                   </div>
                 </div>
 
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <span className="text-[10px] text-slate-500 block font-medium">Est. Drive Time</span>
                   <div className="text-sm sm:text-base font-extrabold text-slate-900 font-mono">
-                    {estimatedDurationMin > 0 ? `${estimatedDurationMin} min` : 'ΓÇö'}
+                    {estimatedDurationMin > 0 ? `${estimatedDurationMin} min` : '--'}
                   </div>
                 </div>
 
@@ -1261,7 +1261,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
                   <span className="text-[10px] text-slate-500 block font-medium">Avg Speed</span>
                   <div className="text-sm sm:text-base font-extrabold text-emerald-600 font-mono">
-                    {totalDistanceKm > 0 ? `${avgSpeedKmh} km/h` : 'ΓÇö'}
+                    {totalDistanceKm > 0 ? `${avgSpeedKmh} km/h` : '--'}
                   </div>
                 </div>
               </div>
@@ -1310,7 +1310,7 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                     title="Swap Origin and Destination"
                   >
                     <ArrowUpDown className="w-3 h-3" />
-                    <span>Γçä Swap Direction</span>
+                    <span>Swap Direction</span>
                   </button>
                 </div>
 
@@ -1327,10 +1327,10 @@ export const RouteCorridorMapModal: React.FC<RouteCorridorMapModalProps> = ({
                   }`}
                 >
                   <span className="flex items-center gap-1.5 font-bold">
-                    {!startPoint && !endPoint && '≡ƒôì Step 1 of 2: Search or choose Start Point (Origin A)'}
-                    {startPoint && !endPoint && '≡ƒôì Step 2 of 2: Now search or choose End Point (Destination B)'}
-                    {!startPoint && endPoint && '≡ƒôì Step 2 of 2: Now search or choose Start Point (Origin A)'}
-                    {startPoint && endPoint && 'Γ£à Corridor Connected! Add intermediate stops below if required.'}
+                    {!startPoint && !endPoint && 'Step 1 of 2: Search or choose Start Point (Origin A)'}
+                    {startPoint && !endPoint && 'Step 2 of 2: Now search or choose End Point (Destination B)'}
+                    {!startPoint && endPoint && 'Step 2 of 2: Now search or choose Start Point (Origin A)'}
+                    {startPoint && endPoint && '✓ Corridor Connected! Add intermediate stops below if required.'}
                   </span>
                   {(startPoint || endPoint || intermediateStops.length > 0) && (
                     <button
